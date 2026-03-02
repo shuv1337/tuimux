@@ -54,7 +54,10 @@ export const App: Component<AppProps> = (props) => {
   // Double-tap Ctrl+A detection for passthrough
   let lastCtrlATime = 0
 
-  const isZellijLayout = () => props.config.layout === "zellij"
+  const [layoutMode, setLayoutMode] = createSignal(props.config.layout)
+  let warnedLayoutMismatch = false
+
+  const isZellijLayout = () => layoutMode() === "zellij"
 
   const getClassicPtyDimensions = () => {
     const dims = terminalDims()
@@ -651,14 +654,19 @@ export const App: Component<AppProps> = (props) => {
         return
       }
 
-      if (message.layout === "zellij") {
-        const panes = (message.panes ?? []).map((pane) => ({
-          paneId: pane.paneId,
-          entry: pane.entry,
-          status: pane.status,
-          buffer: pane.buffer,
-          runId: pane.runId,
-        }))
+    if (message.layout === "zellij") {
+      setLayoutMode("zellij")
+      if (!warnedLayoutMismatch && props.config.layout !== "zellij") {
+        warnedLayoutMismatch = true
+        uiStore.showTemporaryMessage("Server is in zellij layout (restart to switch)")
+      }
+      const panes = (message.panes ?? []).map((pane) => ({
+        paneId: pane.paneId,
+        entry: pane.entry,
+        status: pane.status,
+        buffer: pane.buffer,
+        runId: pane.runId,
+      }))
         const windows = (message.windows ?? []).map((window) => ({
           id: window.id,
           title: window.title,
@@ -682,6 +690,11 @@ export const App: Component<AppProps> = (props) => {
         return
       }
 
+      setLayoutMode("classic")
+      if (!warnedLayoutMismatch && props.config.layout !== "classic") {
+        warnedLayoutMismatch = true
+        uiStore.showTemporaryMessage("Server is in classic layout (restart to switch)")
+      }
       const apps = (message.runningApps ?? []).map((app) => ({
         entry: app.entry,
         status: app.status,
@@ -962,7 +975,7 @@ export const App: Component<AppProps> = (props) => {
         focusMode={isZellijLayout() ? windowsStore.store.focusMode : tabsStore.store.focusMode}
         message={uiStore.store.statusMessage}
         theme={currentTheme()}
-        layoutMode={props.config.layout}
+        layoutMode={layoutMode()}
       />
 
       {/* Modals */}
