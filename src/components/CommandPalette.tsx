@@ -42,10 +42,12 @@ type ResultItem =
   | { type: "app"; item: AppEntry }
   | { type: "command"; command: CommandEntry }
 
+const VISIBLE_RESULTS = 10
+
 export const CommandPalette: Component<CommandPaletteProps> = (props) => {
   const [query, setQuery] = createSignal("")
   const [selectedIndex, setSelectedIndex] = createSignal(0)
-  const VISIBLE_RESULTS = 10
+  const [visibleOffset, setVisibleOffset] = createSignal(0)
 
   const search = createMemo(() => createAppSearch(props.entries))
 
@@ -83,10 +85,6 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       props.onSelect(result.item, action)
     }
   }
-
-  const visibleOffset = createMemo(() =>
-    getVisibleWindowOffset(selectedIndex(), results().length, VISIBLE_RESULTS)
-  )
 
   const visibleResults = createMemo(() =>
     results().slice(visibleOffset(), visibleOffset() + VISIBLE_RESULTS)
@@ -145,6 +143,18 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
   createEffect(() => {
     results()
     setSelectedIndex(0)
+  })
+
+  createEffect(() => {
+    const nextOffset = getVisibleWindowOffset(
+      selectedIndex(),
+      results().length,
+      VISIBLE_RESULTS,
+      visibleOffset()
+    )
+    if (nextOffset !== visibleOffset()) {
+      setVisibleOffset(nextOffset)
+    }
   })
 
   return (

@@ -12,6 +12,15 @@ describe("getVisibleWindowOffset", () => {
     expect(getVisibleWindowOffset(15, 20, 10)).toBe(6)
   })
 
+  test("keeps the current offset when the selection remains visible", () => {
+    expect(getVisibleWindowOffset(9, 20, 10, 1)).toBe(1)
+    expect(getVisibleWindowOffset(11, 20, 10, 2)).toBe(2)
+  })
+
+  test("scrolls up only when the selection leaves the visible window", () => {
+    expect(getVisibleWindowOffset(4, 20, 10, 5)).toBe(4)
+  })
+
   test("clamps to the final visible page", () => {
     expect(getVisibleWindowOffset(99, 20, 10)).toBe(10)
   })

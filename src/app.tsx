@@ -268,12 +268,12 @@ export const App: Component<AppProps> = (props) => {
   }
 
   const handleRemoveApp = async (entry: AppEntry) => {
-    props.sessionClient.stopEntry(entry.id)
-    appsStore.removeEntry(entry.id)
-    tabsStore.removeRunningApp(entry.id)
     if (tabsStore.store.activeTabId === entry.id) {
       setActiveTab(null, { broadcast: true })
     }
+    props.sessionClient.stopEntry(entry.id)
+    appsStore.removeEntry(entry.id)
+    tabsStore.removeRunningApp(entry.id)
     uiStore.closeModal()
 
     const didPersist = await persistAppsConfig()
