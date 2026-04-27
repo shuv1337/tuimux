@@ -87,6 +87,16 @@ The double-tap is useful for:
 | `q` | Disconnect (leave apps running) |
 | `Q` | Quit and stop all apps |
 
+### Command Palette Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Start or switch to selected app |
+| `x` | Stop selected app |
+| `Ctrl+E` | Edit selected app |
+| `Ctrl+R` | Remove selected app and stop any running instances |
+| `Esc` | Close command palette |
+
 ### MANAGER Mode Shortcuts (layout: zellij)
 
 | Key | Action |

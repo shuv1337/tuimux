@@ -22,6 +22,7 @@ import type {
 } from "../types"
 import { generateId } from "./id"
 import { buildSplitNode, collectPaneIds, removePaneLeaf, replacePaneLeaf } from "./layout"
+import { handleClassicRunExit } from "./session-lifecycle"
 
 const MAX_BUFFER_CHARS = 200_000
 
@@ -271,13 +272,18 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
         manualStopRuns.delete(runId)
       }
 
-      const current = runningApps.get(entry.id)
-      if (current) {
-        current.status = exitCode === 0 ? "stopped" : "error"
-        broadcast({ type: "status", id: entry.id, status: current.status })
+      const result = handleClassicRunExit(
+        runningApps,
+        pendingOutputs,
+        entry.id,
+        exitCode,
+        wasManualStop
+      )
+      if (result.status) {
+        broadcast({ type: "status", id: entry.id, status: result.status })
       }
 
-      if (!wasManualStop && app.restartEntry.restartOnExit && exitCode !== 0) {
+      if (result.shouldRestart) {
         setTimeout(() => startApp(app.restartEntry), 1000)
       }
     })
@@ -307,6 +313,13 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
       stopApp(id)
     }
     updateActiveTab(null)
+  }
+
+  const stopEntry = (id: string) => {
+    stopApp(id)
+    if (activeTabId === id) {
+      updateActiveTab(null)
+    }
   }
 
   const restartApp = (entry: AppEntry) => {
@@ -393,6 +406,9 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
         break
       case "stop_all":
         stopAllApps()
+        break
+      case "stop_entry":
+        stopEntry(message.id)
         break
       case "restart":
         restartApp(message.entry)
@@ -876,6 +892,20 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     persistIfNeeded()
   }
 
+  const closeEntryPanes = (entryId: string) => {
+    const paneIds = Array.from(runningPanes.values())
+      .filter((pane) => pane.entry.id === entryId)
+      .map((pane) => pane.paneId)
+
+    for (const paneId of paneIds) {
+      if (findWindowByPane(paneId)) {
+        closePane(paneId)
+      } else {
+        stopPane(paneId)
+      }
+    }
+  }
+
   const resizePane = (paneId: PaneId, cols: number, rows: number) => {
     lastPaneSizes.set(paneId, { cols, rows })
     const pane = runningPanes.get(paneId)
@@ -946,6 +976,9 @@ async function startZellijSessionServer(config: Config): Promise<void> {
         break
       case "close_window":
         closeWindow(message.windowId)
+        break
+      case "stop_entry":
+        closeEntryPanes(message.id)
         break
       case "set_active_window":
         if (message.id) {

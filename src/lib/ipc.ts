@@ -43,6 +43,7 @@ export type ClientMessage =
   | { type: "start"; entry: AppEntry }
   | { type: "stop"; id: string }
   | { type: "stop_all" }
+  | { type: "stop_entry"; id: string }
   | { type: "restart"; entry: AppEntry }
   | { type: "input"; id: string; data: string }
   | { type: "resize"; cols: number; rows: number }

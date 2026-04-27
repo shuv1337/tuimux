@@ -1,6 +1,7 @@
 /**
  * CLI argument parsing for tuidoscope
  */
+import packageJson from "../../package.json"
 
 export interface CLIOptions {
   help: boolean
@@ -13,7 +14,7 @@ export interface CLIOptions {
   unknown: string[]
 }
 
-const VERSION = "0.1.17"
+const VERSION = packageJson.version
 
 const HELP_TEXT = `tuidoscope - A TUI multiplexer for managing terminal applications
 

@@ -66,6 +66,10 @@ export class SessionClient extends EventEmitter {
     this.send({ type: "stop_all" })
   }
 
+  stopEntry(id: string) {
+    this.send({ type: "stop_entry", id })
+  }
+
   restart(entry: AppEntry) {
     this.send({ type: "restart", entry })
   }

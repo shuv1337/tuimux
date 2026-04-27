@@ -267,6 +267,21 @@ export const App: Component<AppProps> = (props) => {
     void persistAppsConfig()
   }
 
+  const handleRemoveApp = async (entry: AppEntry) => {
+    props.sessionClient.stopEntry(entry.id)
+    appsStore.removeEntry(entry.id)
+    tabsStore.removeRunningApp(entry.id)
+    if (tabsStore.store.activeTabId === entry.id) {
+      setActiveTab(null, { broadcast: true })
+    }
+    uiStore.closeModal()
+
+    const didPersist = await persistAppsConfig()
+    uiStore.showTemporaryMessage(
+      didPersist ? `Removed: ${entry.name}` : `Failed to remove: ${entry.name}`
+    )
+  }
+
   const handleDisconnect = () => {
     if (isDisconnecting()) {
       return
@@ -990,6 +1005,11 @@ export const App: Component<AppProps> = (props) => {
             }
 
             uiStore.closeModal()
+            if (action === "remove") {
+              void handleRemoveApp(entry)
+              return
+            }
+
             if (isZellijLayout()) {
               if (action === "switch") {
                 props.sessionClient.createWindow(entry)

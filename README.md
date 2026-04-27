@@ -21,7 +21,7 @@ A centralized TUI management application for running multiple TUI applications i
 - **Embedded Terminals**: Run multiple TUIs in a single window using Ghostty's high-performance terminal emulator.
 - **Tab Management**: Organize and switch between different applications using a vertical sidebar.
 - **Simple Modal Keyboard**: Two modes - TABS mode for navigation and TERMINAL mode for PTY input. Toggle with `Ctrl+A`.
-- **Command Palette**: Quickly search and switch between apps with a fuzzy-search palette (`Space`).
+- **Command Palette**: Quickly search, switch, stop, edit, and remove apps with a fuzzy-search palette (`Space`).
 - **Runtime Management**: Add, edit, and remove application entries directly within the app without restarting.
 - **Session Persistence**: Optional config to remember and restore running applications and the active tab between restarts.
 - **Highly Configurable**: Customize themes and application lists via YAML.
