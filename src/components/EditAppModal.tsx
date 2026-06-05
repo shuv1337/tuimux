@@ -7,6 +7,7 @@ export interface EditAppModalProps {
   theme: ThemeConfig
   entry: Pick<AppEntry, "id" | "name" | "command" | "args" | "cwd">
   onSave: (updates: { name: string; command: string; args?: string; cwd: string }) => void
+  onDelete: () => void
   onClose: () => void
 }
 
@@ -64,6 +65,13 @@ export const EditAppModal: Component<EditAppModalProps> = (props) => {
       return
     }
 
+    // Ctrl+D: delete this app (parent shows a confirmation first)
+    if ((event.ctrl && event.name === "d") || event.sequence === "\u0004") {
+      props.onDelete()
+      event.preventDefault()
+      return
+    }
+
     const focused = fields[focusIndex()]
     if (!focused) {
       return
@@ -117,7 +125,7 @@ export const EditAppModal: Component<EditAppModalProps> = (props) => {
       {/* Footer */}
       <box height={1}>
         <text fg={props.theme.muted}>
-          Enter:Save | Esc:Cancel | Tab:Next field
+          Enter:Save | Ctrl+D:Delete | Esc:Cancel | Tab:Next field
         </text>
       </box>
     </DialogBox>

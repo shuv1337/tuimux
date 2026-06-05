@@ -9,6 +9,8 @@ import { CommandPalette, type GlobalAction } from "./components/CommandPalette"
 import { AddTabModal } from "./components/AddTabModal"
 import { EditAppModal } from "./components/EditAppModal"
 import { ThemePicker } from "./components/ThemePicker"
+import { ConfirmDialog } from "./components/ConfirmDialog"
+import { HelpModal } from "./components/HelpModal"
 
 import { createAppsStore } from "./stores/apps"
 import { createTabsStore } from "./stores/tabs"
@@ -48,6 +50,7 @@ export const App: Component<AppProps> = (props) => {
 
   const [isDisconnecting, setIsDisconnecting] = createSignal(false)
   const [editingEntryId, setEditingEntryId] = createSignal<string | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = createSignal<string | null>(null)
   const [lastGTime, setLastGTime] = createSignal(0)
   const [currentTheme, setCurrentTheme] = createSignal<ThemeConfig>(props.config.theme)
 
@@ -282,6 +285,33 @@ export const App: Component<AppProps> = (props) => {
     )
   }
 
+  // Ask before deleting: open the confirmation dialog for the given app.
+  const requestDelete = (id: string) => {
+    setPendingDeleteId(id)
+    uiStore.openModal("confirm-delete")
+  }
+
+  const cancelDelete = () => {
+    setPendingDeleteId(null)
+    uiStore.closeModal()
+  }
+
+  const confirmDelete = () => {
+    const id = pendingDeleteId()
+    const entry = id ? appsStore.getEntry(id) : undefined
+    setPendingDeleteId(null)
+    if (entry) {
+      void handleRemoveApp(entry)
+    } else {
+      uiStore.closeModal()
+    }
+  }
+
+  const deletingEntry = createMemo(() => {
+    const id = pendingDeleteId()
+    return id ? appsStore.getEntry(id) : undefined
+  })
+
   const handleDisconnect = () => {
     if (isDisconnecting()) {
       return
@@ -395,6 +425,9 @@ export const App: Component<AppProps> = (props) => {
         if (uiStore.store.activeModal === "edit-app") {
           setEditingEntryId(null)
         }
+        if (uiStore.store.activeModal === "confirm-delete") {
+          setPendingDeleteId(null)
+        }
         uiStore.closeModal()
         event.preventDefault()
       }
@@ -436,6 +469,17 @@ export const App: Component<AppProps> = (props) => {
       } else {
         tabsStore.toggleFocus()
       }
+      event.preventDefault()
+      return
+    }
+
+    // === HELP CHEATSHEET (?) ===
+    // Available from tabs/manager focus, but not while typing into a terminal.
+    const inTerminalFocus = isZellij
+      ? windowsStore.store.focusMode === "terminal"
+      : tabsStore.store.focusMode === "terminal"
+    if (!inTerminalFocus && (event.name === "?" || event.sequence === "?")) {
+      uiStore.openModal("help")
       event.preventDefault()
       return
     }
@@ -1006,7 +1050,7 @@ export const App: Component<AppProps> = (props) => {
 
             uiStore.closeModal()
             if (action === "remove") {
-              void handleRemoveApp(entry)
+              requestDelete(entry.id)
               return
             }
 
@@ -1059,10 +1103,36 @@ export const App: Component<AppProps> = (props) => {
           theme={currentTheme()}
           entry={editingEntry()!}
           onSave={(updates) => handleEditApp(editingEntry()!.id, updates)}
+          onDelete={() => {
+            const id = editingEntry()!.id
+            setEditingEntryId(null)
+            requestDelete(id)
+          }}
           onClose={() => {
             uiStore.closeModal()
             setEditingEntryId(null)
           }}
+        />
+      </Show>
+
+      <Show when={uiStore.store.activeModal === "confirm-delete" && deletingEntry()}>
+        <ConfirmDialog
+          theme={currentTheme()}
+          title="Delete app?"
+          message={`Delete "${deletingEntry()!.name}" from your app list?`}
+          detail="This removes it from your config. (it can be re-added later)"
+          confirmHint="y:Delete"
+          cancelHint="n/Esc:Cancel"
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+        />
+      </Show>
+
+      <Show when={uiStore.store.activeModal === "help"}>
+        <HelpModal
+          theme={currentTheme()}
+          layoutMode={layoutMode()}
+          onClose={() => uiStore.closeModal()}
         />
       </Show>
 
