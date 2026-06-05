@@ -31,12 +31,12 @@ export const StatusBar: Component<StatusBarProps> = (props) => {
             when={props.layoutMode === "zellij"}
             fallback={
               <text fg={props.theme.foreground}>
-                {" j/k:Nav  gg/G:Jump  Enter:Select  Space:Palette  t:New  e:Edit  x:Stop  r:Restart  K:KillAll  q:Detach  Q:Quit  Ctrl+A:Terminal"}
+                {" j/k:Nav  Enter:Select  Space:Palette  t:New  e:Edit  Ctrl+A:Terminal  ?:Help"}
               </text>
             }
           >
             <text fg={props.theme.foreground}>
-              {" v:SplitV  s:SplitH  n:NewWin  x:ClosePane  w:CloseWin  [:PrevWin  ]:NextWin  p:NextPane  Space:Palette  Ctrl+A:Terminal"}
+              {" Space:Palette  n:NewWin  v/s:Split  p:NextPane  Ctrl+A:Terminal  ?:Help"}
             </text>
           </Show>
         </Show>

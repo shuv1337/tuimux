@@ -244,7 +244,7 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       >
         <box height={1}>
           <text fg={props.theme.muted}>
-            Enter:Select | x:Stop | Ctrl+E:Edit | Ctrl+R:Remove | Esc:Close | ↑↓:Navigate
+            Enter:Select | x:Stop | Ctrl+E:Edit | Ctrl+R:Delete | Esc:Close | ↑↓:Navigate
           </text>
         </box>
       </box>
