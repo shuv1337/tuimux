@@ -1,11 +1,11 @@
 {
-  "name": "tuidoscope",
+  "name": "tuimux",
   "version": "0.1.17",
   "description": "A centralized TUI management app for running TUI applications in embedded terminal windows",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "tuidoscope": "dist/index.js"
+    "tuimux": "dist/index.js"
   },
   "files": [
     "dist"
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shuv1337/tuidoscope.git"
+    "url": "git+https://github.com/shuv1337/tuimux.git"
   },
   "keywords": [
     "tui",
@@ -30,9 +30,9 @@
   "author": "shuv1337",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shuv1337/tuidoscope/issues"
+    "url": "https://github.com/shuv1337/tuimux/issues"
   },
-  "homepage": "https://github.com/shuv1337/tuidoscope#readme",
+  "homepage": "https://github.com/shuv1337/tuimux#readme",
   "dependencies": {
     "@opentui/core": "^0.1.67",
     "@opentui/solid": "^0.1.67",

@@ -22,7 +22,7 @@ import type {
 } from "../types"
 import { generateId } from "./id"
 import { buildSplitNode, collectPaneIds, removePaneLeaf, replacePaneLeaf } from "./layout"
-import { handleClassicRunExit } from "./session-lifecycle"
+import { handleTabsRunExit } from "./session-lifecycle"
 
 const MAX_BUFFER_CHARS = 200_000
 
@@ -113,8 +113,8 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
   if (layoutOverride) {
     config.layout = layoutOverride
   }
-  if (config.layout === "zellij") {
-    await startZellijSessionServer(config)
+  if (config.layout === "panes") {
+    await startPanesSessionServer(config)
     return
   }
   initSessionPath(config)
@@ -272,7 +272,7 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
         manualStopRuns.delete(runId)
       }
 
-      const result = handleClassicRunExit(
+      const result = handleTabsRunExit(
         runningApps,
         pendingOutputs,
         entry.id,
@@ -455,7 +455,7 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
     socket.write(
       serializeMessage({
         type: "snapshot",
-        layout: "classic",
+        layout: "tabs",
         runningApps: snapshot,
         activeTabId,
       })
@@ -547,7 +547,7 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
   process.on("SIGINT", () => void shutdown())
 }
 
-async function startZellijSessionServer(config: Config): Promise<void> {
+async function startPanesSessionServer(config: Config): Promise<void> {
   initSessionPath(config)
 
   const entries = config.apps.map(configToEntry)
@@ -719,6 +719,35 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     persistIfNeeded()
   }
 
+  // After windows/panes are removed, make sure activeWindowId/activePaneId still point at
+  // live state: the active pane must exist in runningPanes AND live in a remaining window.
+  // If not, fall back to the first available window's active pane (or null if none remain).
+  const ensureActiveStateValid = () => {
+    const activeWindow = activeWindowId ? windows.get(activeWindowId) : undefined
+    const activePaneAlive =
+      activePaneId !== null &&
+      runningPanes.has(activePaneId) &&
+      findWindowByPane(activePaneId) !== undefined
+
+    if (activeWindow && activePaneAlive && findWindowByPane(activePaneId!)?.id === activeWindow.id) {
+      return
+    }
+
+    const fallbackWindow = windows.values().next().value as WindowState | undefined
+    if (!fallbackWindow) {
+      if (activeWindowId !== null) {
+        updateActiveWindow(null)
+      }
+      if (activePaneId !== null) {
+        updateActivePane(null)
+      }
+      return
+    }
+
+    updateActiveWindow(fallbackWindow.id)
+    updateActivePane(fallbackWindow.activePaneId)
+  }
+
   const startPane = (entry: AppEntry, paneId: PaneId = generateId()) => {
     const existing = runningPanes.get(paneId)
     if (existing && existing.status === "running") {
@@ -730,6 +759,9 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     }
 
     const size = lastPaneSizes.get(paneId) ?? { cols: 80, rows: 24 }
+    // Seed the size map so every live pane always has an entry — splitPane's
+    // min-size check reads it before the first resize event can populate it.
+    lastPaneSizes.set(paneId, size)
     const ptyProcess = spawnPty(entry, { cols: size.cols, rows: size.rows })
     const runId = nextRunId++
 
@@ -790,6 +822,7 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     killPty(pane.pty)
     runningPanes.delete(paneId)
     pendingOutputs.delete(paneId)
+    lastPaneSizes.delete(paneId)
     broadcast({ type: "pane_stopped", paneId })
     persistIfNeeded()
   }
@@ -812,11 +845,32 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     persistIfNeeded()
   }
 
+  const MIN_PANE_COLS = 10
+  const MIN_PANE_ROWS = 3
+
   const splitPane = (paneId: PaneId, direction: PaneSplitDirection, entry: AppEntry) => {
     const window = findWindowByPane(paneId)
     if (!window) {
       return
     }
+
+    // Reject the split if either resulting sub-pane would be too small to be usable.
+    // lastPaneSizes holds the pane's *content* dimensions (outer rect minus the -2 cols /
+    // -3 rows borders applied in app.tsx resize). Reconstruct the outer size, halve it along
+    // the split axis, then re-subtract the borders to estimate each child's content size.
+    const size = lastPaneSizes.get(paneId) ?? { cols: 80, rows: 24 }
+    if (direction === "vertical") {
+      const childCols = Math.floor((size.cols + 2) / 2) - 2
+      if (childCols < MIN_PANE_COLS) {
+        return
+      }
+    } else {
+      const childRows = Math.floor((size.rows + 3) / 2) - 3
+      if (childRows < MIN_PANE_ROWS) {
+        return
+      }
+    }
+
     const newPaneId = startPane(entry)
     const nextLayout = replacePaneLeaf(
       window.layout,
@@ -848,11 +902,8 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     if (!removal.layout) {
       windows.delete(window.id)
       broadcast({ type: "window_closed", windowId: window.id })
-      if (activeWindowId === window.id) {
-        const nextWindow = windows.values().next().value as WindowState | undefined
-        updateActiveWindow(nextWindow?.id ?? null)
-        updateActivePane(nextWindow?.activePaneId ?? null)
-      }
+      ensureActiveStateValid()
+      persistIfNeeded()
       return
     }
 
@@ -868,6 +919,8 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     if (activePaneId === paneId) {
       updateActivePane(nextActivePane)
     }
+    ensureActiveStateValid()
+    persistIfNeeded()
   }
 
   const closeWindow = (windowId: WindowId) => {
@@ -884,11 +937,7 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     windows.delete(windowId)
     broadcast({ type: "window_closed", windowId })
 
-    if (activeWindowId === windowId) {
-      const nextWindow = windows.values().next().value as WindowState | undefined
-      updateActiveWindow(nextWindow?.id ?? null)
-      updateActivePane(nextWindow?.activePaneId ?? null)
-    }
+    ensureActiveStateValid()
     persistIfNeeded()
   }
 
@@ -1029,7 +1078,7 @@ async function startZellijSessionServer(config: Config): Promise<void> {
     socket.write(
       serializeMessage({
         type: "snapshot",
-        layout: "zellij",
+        layout: "panes",
         windows: snapshotWindows,
         panes: snapshotPanes,
         activeWindowId,
@@ -1100,18 +1149,53 @@ async function startZellijSessionServer(config: Config): Promise<void> {
 
       for (const window of session.windows) {
         const paneIds = collectPaneIds(window.layout)
-        if (paneIds.some((paneId) => runningPanes.has(paneId))) {
-          windows.set(window.id, {
-            id: window.id,
-            title: window.title,
-            layout: window.layout,
-            activePaneId: window.activePaneId,
-          })
+        const livePaneIds = paneIds.filter((paneId) => runningPanes.has(paneId))
+        if (livePaneIds.length === 0) {
+          continue
         }
+
+        // The persisted activePaneId may reference a pane that no longer exists (failed to
+        // restart) or that isn't part of this window's layout; fall back to the first live pane.
+        const activePaneId =
+          paneIds.includes(window.activePaneId) && runningPanes.has(window.activePaneId)
+            ? window.activePaneId
+            : livePaneIds[0]
+
+        windows.set(window.id, {
+          id: window.id,
+          title: window.title,
+          layout: window.layout,
+          activePaneId,
+        })
       }
 
-      activeWindowId = session.activeWindowId ?? session.windows[0]?.id ?? null
-      activePaneId = session.activePaneId ?? session.windows[0]?.activePaneId ?? null
+      // Validate the top-level active pointers against the live, restored state; otherwise
+      // fall back to the first restored window and its (validated) active pane.
+      const firstWindow = windows.values().next().value as WindowState | undefined
+      const restoredActiveWindow =
+        session.activeWindowId && windows.has(session.activeWindowId)
+          ? windows.get(session.activeWindowId)
+          : undefined
+      const activeWindow = restoredActiveWindow ?? firstWindow
+
+      if (activeWindow) {
+        activeWindowId = activeWindow.id
+        const candidatePane = session.activePaneId
+        const candidateWindow = candidatePane ? findWindowByPane(candidatePane) : undefined
+        if (
+          candidatePane &&
+          runningPanes.has(candidatePane) &&
+          candidateWindow !== undefined
+        ) {
+          activePaneId = candidatePane
+          activeWindowId = candidateWindow.id
+        } else {
+          activePaneId = activeWindow.activePaneId
+        }
+      } else {
+        activeWindowId = null
+        activePaneId = null
+      }
     }
 
     for (const entry of entries) {

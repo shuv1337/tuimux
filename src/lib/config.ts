@@ -18,7 +18,7 @@ export interface LoadConfigResult {
 }
 
 // Local project config (takes precedence)
-const LOCAL_CONFIG_PATH = "./tuidoscope.yaml"
+const LOCAL_CONFIG_PATH = "./tuimux.yaml"
 
 // Zod schema for validation
 // Default theme: Graphite (tight dark surface ramp + sparse cyan accent).
@@ -48,11 +48,11 @@ const SessionSchema = z.object({
   file: z.string().optional(), // Will use XDG default if not specified
 })
 
-const ConfigSchema = z.object({
+export const ConfigSchema = z.object({
   version: z.number().default(2),
   theme: ThemeSchema.default({}),
   tab_width: z.number().default(20),
-  layout: z.enum(["classic", "zellij"]).default("classic"),
+  layout: z.preprocess((v) => (v === "classic" ? "tabs" : v === "zellij" ? "panes" : v), z.enum(["tabs", "panes"]).default("tabs")),
   // Move focus into the app's pane automatically when it launches.
   focus_on_launch: z.boolean().default(true),
   apps: z.array(AppEntrySchema).default([]),
@@ -91,8 +91,8 @@ export function expandPath(path: string): string {
  * Load configuration from file, with fallback to defaults
  * 
  * Search order:
- * 1. ./tuidoscope.yaml (local project config)
- * 2. $XDG_CONFIG_HOME/tuidoscope/tuidoscope.yaml
+ * 1. ./tuimux.yaml (local project config)
+ * 2. $XDG_CONFIG_HOME/tuimux/tuimux.yaml
  * 3. Default values
  */
 export function ensureAppEntryIds(config: Config): { config: Config; updated: boolean } {

@@ -1,4 +1,4 @@
-# tuidoscope
+# tuimux
 
 A centralized TUI management application for running multiple TUI applications in embedded terminal windows. Built with [OpenTUI](https://github.com/anomalyco/opentui) and SolidJS.
 
@@ -56,10 +56,10 @@ See also: [CONFIG.md](./CONFIG.md) for a comprehensive configuration reference.
 
 ### Quick Start (No Install)
 
-Run tuidoscope instantly without installing:
+Run tuimux instantly without installing:
 
 ```bash
-bunx tuidoscope
+bunx tuimux
 ```
 
 ### Installation
@@ -67,13 +67,13 @@ bunx tuidoscope
 Install globally:
 
 ```bash
-bun install -g tuidoscope
+bun install -g tuimux
 ```
 
 Then run from anywhere:
 
 ```bash
-tuidoscope
+tuimux
 ```
 
 ## Development
@@ -81,8 +81,8 @@ tuidoscope
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/shuv1337/tuidoscope.git
-cd tuidoscope
+git clone https://github.com/shuv1337/tuimux.git
+cd tuimux
 bun install
 ```
 
@@ -106,11 +106,11 @@ bun run typecheck
 
 ## Configuration
 
-Tuidoscope looks for a configuration file at `~/.config/tuidoscope/tuidoscope.yaml`. It also supports a local `tuidoscope.yaml` in the current working directory for project-specific setups.
+Tuimux looks for a configuration file at `~/.config/tuimux/tuimux.yaml`. It also supports a local `tuimux.yaml` in the current working directory for project-specific setups.
 
 ### Keyboard Shortcuts
 
-Tuidoscope uses a simple two-mode system:
+Tuimux uses a simple two-mode system:
 
 - **`Ctrl+A`** - Toggle between TABS and TERMINAL mode
 - **Double-tap `Ctrl+A`** - Send `Ctrl+A` to the terminal (useful for nested tmux/screen)
@@ -131,12 +131,13 @@ Tuidoscope uses a simple two-mode system:
 | `K` | Kill all running apps |
 | `q` | Disconnect (leave apps running) |
 | `Q` | Quit and stop all apps |
+| `Shift+L` | Switch layout (tabs/panes) |
 
 **TERMINAL Mode**: All keystrokes pass through to the embedded terminal.
 
 ### Theme Customization
 
-Default theme is Night Owl. Customize in your `tuidoscope.yaml`:
+Default theme is Night Owl. Customize in your `tuimux.yaml`:
 
 ```yaml
 theme:
@@ -148,6 +149,13 @@ theme:
 ```
 
 ## Change Log
+
+### v0.4.0
+- **Rebranded to tuimux**: Project renamed from tuidoscope to tuimux.
+- **Layout Mode Rename**: "classic" layout is now "tabs"; "zellij" layout is now "panes". Legacy values still accepted.
+- **Panes Mode Window Sidebar**: In panes layout, a window list sidebar replaces the tab list for managing windows.
+- **Switch Layout Keybind**: Press `Shift+L` in non-terminal focus to toggle between tabs and panes layout.
+- **Switch Layout Command Palette**: "Switch layout" command added to the command palette.
 
 ### v0.3.0
 - **Simplified Keyboard System**: Replaced tmux-style leader key with simple focus-toggle model using `Ctrl+A`.
@@ -172,7 +180,7 @@ theme:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to open an issue or submit a pull request on [GitHub](https://github.com/shuv1337/tuidoscope).
+Contributions are welcome! Please feel free to open an issue or submit a pull request on [GitHub](https://github.com/shuv1337/tuimux).
 
 ## Acknowledgments
 

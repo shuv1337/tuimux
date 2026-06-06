@@ -1,6 +1,6 @@
 import { Component, For, createSignal, createMemo, createEffect } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { AppEntry } from "../types"
+import type { AppEntry, LayoutMode } from "../types"
 import type { Palette } from "../lib/palette"
 import { createAppSearch } from "../lib/fuzzy"
 import { buildEntryCommand } from "../lib/command"
@@ -8,7 +8,7 @@ import { getVisibleWindowOffset } from "../lib/list-window"
 import { DialogBox } from "./DialogBox"
 
 export type CommandAction = "switch" | "start" | "stop" | "restart" | "edit" | "remove"
-export type GlobalAction = { type: "open_theme_picker" }
+export type GlobalAction = { type: "open_theme_picker" } | { type: "switch_layout" }
 
 export interface CommandPaletteProps {
   entries: AppEntry[]
@@ -16,6 +16,7 @@ export interface CommandPaletteProps {
   onSelect: (entry: AppEntry, action: CommandAction) => void
   onGlobalAction?: (action: GlobalAction) => void
   onClose: () => void
+  currentLayout?: LayoutMode
 }
 
 interface CommandEntry {
@@ -52,7 +53,7 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
 
   const search = createMemo(() => createAppSearch(props.entries))
 
-  const commands: CommandEntry[] = [
+  const commands = createMemo((): CommandEntry[] => [
     {
       id: "theme-picker",
       name: "Themes...",
@@ -60,14 +61,23 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       keywords: ["theme", "color", "scheme", "palette"],
       action: { type: "open_theme_picker" },
     },
-  ]
+    {
+      id: "switch-layout",
+      name: props.currentLayout
+        ? ("Switch to " + (props.currentLayout === "tabs" ? "panes" : "tabs") + " layout")
+        : "Switch layout...",
+      description: "Toggle between tabs and panes layout",
+      keywords: ["layout", "switch", "tabs", "panes", "mode", "zellij", "classic"],
+      action: { type: "switch_layout" },
+    },
+  ])
 
   // Combined results: commands + apps
   const results = createMemo((): ResultItem[] => {
     const trimmedQuery = query().trim()
     const appResults = search().search(query())
 
-    const commandResults = (trimmedQuery ? commands.filter((command) => matchesCommandQuery(trimmedQuery, command)) : commands)
+    const commandResults = (trimmedQuery ? commands().filter((command) => matchesCommandQuery(trimmedQuery, command)) : commands())
       .map((command): ResultItem => ({ type: "command", command }))
 
     // Combine results: commands first, then apps

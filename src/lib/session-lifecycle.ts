@@ -1,24 +1,24 @@
 import type { AppStatus } from "../types"
 
-export interface ClassicExitedRunState {
+export interface TabsExitedRunState {
   status: AppStatus
   restartEntry: {
     restartOnExit: boolean
   }
 }
 
-export interface ClassicExitResult {
+export interface TabsExitResult {
   status: AppStatus | null
   shouldRestart: boolean
 }
 
-export function handleClassicRunExit<T extends ClassicExitedRunState, P>(
+export function handleTabsRunExit<T extends TabsExitedRunState, P>(
   runningApps: Map<string, T>,
   pendingOutputs: Map<string, P>,
   id: string,
   exitCode: number,
   wasManualStop: boolean
-): ClassicExitResult {
+): TabsExitResult {
   const current = runningApps.get(id)
   if (!current) {
     return { status: null, shouldRestart: false }

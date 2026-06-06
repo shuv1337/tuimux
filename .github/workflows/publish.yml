@@ -50,8 +50,8 @@ jobs:
 
       - name: Setup Git Identity
         run: |
-          git config --global user.email "tuidoscope@github.com"
-          git config --global user.name "tuidoscope"
+          git config --global user.email "tuimux@github.com"
+          git config --global user.name "tuimux"
 
       - name: Bump version
         id: version

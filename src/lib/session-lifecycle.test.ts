@@ -1,19 +1,19 @@
 import { describe, expect, test } from "bun:test"
-import { handleClassicRunExit, type ClassicExitedRunState } from "./session-lifecycle"
+import { handleTabsRunExit, type TabsExitedRunState } from "./session-lifecycle"
 
-function makeRun(restartOnExit: boolean): ClassicExitedRunState {
+function makeRun(restartOnExit: boolean): TabsExitedRunState {
   return {
     status: "running",
     restartEntry: { restartOnExit },
   }
 }
 
-describe("handleClassicRunExit", () => {
+describe("handleTabsRunExit", () => {
   test("clears stale running state before auto-restart", () => {
     const runningApps = new Map([["app-1", makeRun(true)]])
     const pendingOutputs = new Map([["app-1", { data: "" }]])
 
-    const result = handleClassicRunExit(runningApps, pendingOutputs, "app-1", 1, false)
+    const result = handleTabsRunExit(runningApps, pendingOutputs, "app-1", 1, false)
 
     expect(result).toEqual({ status: "error", shouldRestart: true })
     expect(runningApps.has("app-1")).toBe(false)
@@ -25,7 +25,7 @@ describe("handleClassicRunExit", () => {
     const runningApps = new Map([["app-1", run]])
     const pendingOutputs = new Map([["app-1", { data: "" }]])
 
-    const result = handleClassicRunExit(runningApps, pendingOutputs, "app-1", 1, true)
+    const result = handleTabsRunExit(runningApps, pendingOutputs, "app-1", 1, true)
 
     expect(result).toEqual({ status: "error", shouldRestart: false })
     expect(runningApps.get("app-1")).toBe(run)
@@ -37,7 +37,7 @@ describe("handleClassicRunExit", () => {
     const runningApps = new Map([["app-1", run]])
     const pendingOutputs = new Map([["app-1", { data: "" }]])
 
-    const result = handleClassicRunExit(runningApps, pendingOutputs, "app-1", 0, false)
+    const result = handleTabsRunExit(runningApps, pendingOutputs, "app-1", 0, false)
 
     expect(result).toEqual({ status: "stopped", shouldRestart: false })
     expect(runningApps.get("app-1")?.status).toBe("stopped")

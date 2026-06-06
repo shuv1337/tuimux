@@ -3,10 +3,10 @@ import { dirname } from "path"
 import { paths } from "./xdg"
 
 // Use XDG state dir for debug log, allow override via env
-const DEBUG_LOG_PATH = process.env.TUIDOSCOPE_DEBUG_LOG || paths.debugLog
+const DEBUG_LOG_PATH = process.env.TUIMUX_DEBUG_LOG || paths.debugLog
 
 let dirCreated = false
-let debugEnabled = !!process.env.TUIDOSCOPE_DEBUG
+let debugEnabled = !!process.env.TUIMUX_DEBUG
 
 /**
  * Enable debug logging programmatically (e.g., from --debug flag)

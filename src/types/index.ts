@@ -20,7 +20,7 @@ export interface AppEntryConfig {
 
 export interface SessionConfig {
   persist: boolean
-  file?: string  // Optional, uses XDG_STATE_HOME/tuidoscope/session.yaml by default
+  file?: string  // Optional, uses XDG_STATE_HOME/tuimux/session.yaml by default
 }
 
 export interface Config {
@@ -48,7 +48,7 @@ export interface AppEntry {
 
 export type AppStatus = "stopped" | "running" | "error"
 
-export type LayoutMode = "classic" | "zellij"
+export type LayoutMode = "tabs" | "panes"
 
 export type PaneId = string
 export type WindowId = string

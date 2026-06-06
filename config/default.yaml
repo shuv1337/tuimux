@@ -1,4 +1,4 @@
-# tuidoscope default configuration
+# tuimux default configuration
 
 version: 2
 
@@ -30,4 +30,4 @@ apps:
 # Session persistence
 session:
   persist: true
-  file: "~/.local/state/tuidoscope/session.yaml"
+  file: "~/.local/state/tuimux/session.yaml"

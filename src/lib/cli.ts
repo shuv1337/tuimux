@@ -1,5 +1,5 @@
 /**
- * CLI argument parsing for tuidoscope
+ * CLI argument parsing for tuimux
  */
 import packageJson from "../../package.json"
 
@@ -10,22 +10,22 @@ export interface CLIOptions {
   add: boolean
   server: boolean
   shutdown: boolean
-  layout?: "classic" | "zellij"
+  layout?: "tabs" | "panes"
   unknown: string[]
 }
 
 const VERSION = packageJson.version
 
-const HELP_TEXT = `tuidoscope - A TUI multiplexer for managing terminal applications
+const HELP_TEXT = `tuimux - A TUI multiplexer for managing terminal applications
 
-Usage: tuidoscope [options]
+Usage: tuimux [options]
 
 Options:
   -h, --help       Show this help message and exit
   -v, --version    Show version number and exit
   -d, --debug      Enable debug logging (writes to state dir)
   -a, --add        Launch directly into the add app wizard
-      --layout     Override layout mode (classic|zellij)
+      --layout     Override layout mode (tabs|panes)
       --server     Start the session server (internal use)
       --shutdown   Shutdown session server and clear session state
 
@@ -45,7 +45,7 @@ In terminal mode:
   Ctrl+a           Switch back to tabs mode
   Ctrl+a Ctrl+a    Send Ctrl+a to the terminal
 
-For more information, visit: https://github.com/shuv1337/tuidoscope
+For more information, visit: https://github.com/shuv1337/tuimux
 `
 
 /**
@@ -66,8 +66,16 @@ export function parseArgs(argv: string[]): CLIOptions {
   }
 
   const parseLayout = (value: string | undefined) => {
-    if (value === "classic" || value === "zellij") {
+    if (value === "tabs" || value === "panes") {
       options.layout = value
+      return true
+    }
+    if (value === "classic") {
+      options.layout = "tabs"
+      return true
+    }
+    if (value === "zellij") {
+      options.layout = "panes"
       return true
     }
     return false
@@ -136,7 +144,7 @@ export function printHelp(): void {
  * Print version and exit
  */
 export function printVersion(): void {
-  console.log(`tuidoscope ${VERSION}`)
+  console.log(`tuimux ${VERSION}`)
 }
 
 /**
@@ -144,5 +152,5 @@ export function printVersion(): void {
  */
 export function printUnknownFlags(flags: string[]): void {
   console.error(`Unknown option${flags.length > 1 ? "s" : ""}: ${flags.join(", ")}`)
-  console.error(`Try 'tuidoscope --help' for more information.`)
+  console.error(`Try 'tuimux --help' for more information.`)
 }

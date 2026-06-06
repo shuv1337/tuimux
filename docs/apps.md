@@ -1,10 +1,10 @@
 # App Configuration Examples
 
-This guide provides examples and best practices for configuring TUI applications in tuidoscope.
+This guide provides examples and best practices for configuring TUI applications in tuimux.
 
 ## App Configuration Basics
 
-Each app in tuidoscope is defined in the `apps` section of your `tuidoscope.yaml` configuration file. An app entry can have the following properties:
+Each app in tuimux is defined in the `apps` section of your `tuimux.yaml` configuration file. An app entry can have the following properties:
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -43,14 +43,14 @@ apps:
 You can use these placeholders in `cwd` and `args`:
 
 - `~` - Expands to your home directory
-- `<CONFIG_DIR>` - Directory containing your `tuidoscope.yaml`
-- `<STATE_DIR>` - XDG state directory (`~/.local/state/tuidoscope/`)
+- `<CONFIG_DIR>` - Directory containing your `tuimux.yaml`
+- `<STATE_DIR>` - XDG state directory (`~/.local/state/tuimux/`)
 
 ```yaml
 apps:
   - name: "Config Editor"
     command: "nvim"
-    args: "<CONFIG_DIR>/tuidoscope.yaml"
+    args: "<CONFIG_DIR>/tuimux.yaml"
 ```
 
 ## Tips
@@ -64,7 +64,7 @@ apps:
 
 ## Shell Examples
 
-Shells are the most common apps to run in tuidoscope. Here are examples for popular shells:
+Shells are the most common apps to run in tuimux. Here are examples for popular shells:
 
 ### Bash
 
@@ -81,7 +81,7 @@ With a custom profile:
 apps:
   - name: "Bash (custom)"
     command: "bash"
-    args: "--rcfile ~/.bashrc.tuidoscope"
+    args: "--rcfile ~/.bashrc.tuimux"
 ```
 
 ### Zsh
@@ -120,7 +120,7 @@ With a specific config directory:
 apps:
   - name: "Fish (custom)"
     command: "fish"
-    args: "--config ~/.config/fish/tuidoscope.fish"
+    args: "--config ~/.config/fish/tuimux.fish"
 ```
 
 ### Nushell
@@ -138,7 +138,7 @@ With custom config:
 apps:
   - name: "Nushell (custom)"
     command: "nu"
-    args: "--config ~/.config/nushell/tuidoscope.nu"
+    args: "--config ~/.config/nushell/tuimux.nu"
 ```
 
 ### Shell Tips
@@ -152,7 +152,7 @@ apps:
 
 ## System Monitor Examples
 
-System monitors are excellent candidates for tuidoscope tabs. They provide at-a-glance system status while you work in other tabs.
+System monitors are excellent candidates for tuimux tabs. They provide at-a-glance system status while you work in other tabs.
 
 ### htop
 
@@ -265,7 +265,7 @@ apps:
 
 ## File Manager Examples
 
-Terminal file managers are perfect for tuidoscope - navigate your filesystem in one tab while working in another.
+Terminal file managers are perfect for tuimux - navigate your filesystem in one tab while working in another.
 
 ### yazi
 
@@ -304,7 +304,7 @@ With a custom config directory:
 apps:
   - name: "ranger"
     command: "ranger"
-    args: "--confdir=~/.config/ranger-tuidoscope"
+    args: "--confdir=~/.config/ranger-tuimux"
 ```
 
 Clean mode (no preview column):
@@ -333,7 +333,7 @@ With custom config:
 apps:
   - name: "lf"
     command: "lf"
-    args: "-config ~/.config/lf/tuidoscope.lfrc"
+    args: "-config ~/.config/lf/tuimux.lfrc"
 ```
 
 Open in a specific path:
@@ -446,7 +446,7 @@ apps:
 
 ## Git Tool Examples
 
-Git TUI tools provide powerful visual interfaces for git operations. They're excellent tuidoscope companions for development workflows.
+Git TUI tools provide powerful visual interfaces for git operations. They're excellent tuimux companions for development workflows.
 
 ### lazygit
 
@@ -474,7 +474,7 @@ With custom config:
 apps:
   - name: "lazygit"
     command: "lazygit"
-    args: "--use-config-file ~/.config/lazygit/tuidoscope.yml"
+    args: "--use-config-file ~/.config/lazygit/tuimux.yml"
 ```
 
 In work tree mode (for git worktrees):
@@ -589,7 +589,7 @@ apps:
 
 ## Container Tool Examples
 
-Container management TUIs are invaluable for monitoring and managing Docker containers and Kubernetes clusters. They integrate seamlessly with tuidoscope for DevOps workflows.
+Container management TUIs are invaluable for monitoring and managing Docker containers and Kubernetes clusters. They integrate seamlessly with tuimux for DevOps workflows.
 
 ### lazydocker
 
@@ -617,7 +617,7 @@ With custom config:
 apps:
   - name: "lazydocker"
     command: "lazydocker"
-    args: "--config ~/.config/lazydocker/tuidoscope.yml"
+    args: "--config ~/.config/lazydocker/tuimux.yml"
 ```
 
 For a specific project directory:
@@ -691,7 +691,7 @@ apps:
   - name: "k9s"
     command: "k9s"
     env:
-      K9S_CONFIG_DIR: "~/.config/k9s-tuidoscope"
+      K9S_CONFIG_DIR: "~/.config/k9s-tuimux"
 ```
 
 Start directly in a specific resource view:
@@ -717,13 +717,13 @@ apps:
 - Use `--readonly` flag with k9s on production clusters to prevent accidental changes
 - Consider having multiple k9s tabs for different clusters (staging, production)
 - lazydocker is excellent alongside a shell tab for quick container debugging
-- Both tools support custom themes - match them to your tuidoscope Night Owl theme for consistency
+- Both tools support custom themes - match them to your tuimux Night Owl theme for consistency
 
 ---
 
 ## Editor Examples
 
-Terminal text editors are a natural fit for tuidoscope, allowing you to edit files in one tab while running commands, monitoring logs, or managing files in others.
+Terminal text editors are a natural fit for tuimux, allowing you to edit files in one tab while running commands, monitoring logs, or managing files in others.
 
 ### Neovim
 
@@ -742,7 +742,7 @@ Open a specific file:
 apps:
   - name: "nvim (config)"
     command: "nvim"
-    args: "<CONFIG_DIR>/tuidoscope.yaml"
+    args: "<CONFIG_DIR>/tuimux.yaml"
 ```
 
 Open a directory (file explorer mode):
@@ -782,7 +782,7 @@ apps:
     command: "nvim"
     cwd: "~/projects/myapp"
     env:
-      NVIM_APPNAME: "nvim-tuidoscope"  # Use alternate config directory
+      NVIM_APPNAME: "nvim-tuimux"  # Use alternate config directory
 ```
 
 ### Helix
@@ -822,7 +822,7 @@ With a specific config directory:
 apps:
   - name: "helix"
     command: "hx"
-    args: "--config ~/.config/helix/tuidoscope.toml"
+    args: "--config ~/.config/helix/tuimux.toml"
 ```
 
 Health check mode (verify LSP and tree-sitter):
@@ -871,7 +871,7 @@ With a custom config directory:
 apps:
   - name: "micro"
     command: "micro"
-    args: "-config-dir ~/.config/micro-tuidoscope"
+    args: "-config-dir ~/.config/micro-tuimux"
 ```
 
 With plugin enabled:
@@ -909,7 +909,7 @@ apps:
 - Set `cwd` to your project root so relative paths work correctly
 - Most editors support opening directories for file browsing - useful for project navigation
 - Neovim and Helix use modal editing (vim-style), while micro uses standard keybindings
-- For Neovim with many plugins, consider a minimal config for faster startup in tuidoscope
+- For Neovim with many plugins, consider a minimal config for faster startup in tuimux
 - Helix has built-in LSP support - no plugins needed for code intelligence
 - micro is excellent for quick edits if you're not familiar with vim keybindings
 - Consider setting `TERM=xterm-256color` in `env` if you see color issues
@@ -918,7 +918,7 @@ apps:
 
 ## AI Coding Agent Examples
 
-AI coding agents are terminal-based tools that use large language models to help write, review, and debug code. They work exceptionally well in tuidoscope - run the AI agent in one tab while monitoring system resources, browsing files, or running tests in others.
+AI coding agents are terminal-based tools that use large language models to help write, review, and debug code. They work exceptionally well in tuimux - run the AI agent in one tab while monitoring system resources, browsing files, or running tests in others.
 
 ### Claude Code
 
@@ -1495,7 +1495,7 @@ apps:
 - On Linux, you can grant capabilities instead of running as root:
   - `sudo setcap cap_net_raw+ep $(which bandwhich)`
   - `sudo setcap cap_net_raw+ep $(which trip)`
-- After setting capabilities, you can run without sudo in your tuidoscope config
+- After setting capabilities, you can run without sudo in your tuimux config
 - `bandwhich` is excellent for understanding which processes are using network bandwidth
 - `trippy` is great for diagnosing latency issues and visualizing network paths
 - Both tools benefit from a stable terminal size - avoid resizing while running
@@ -1611,7 +1611,7 @@ apps:
 apps:
   - name: "Config Editor"
     command: "nvim"
-    args: "tuidoscope.yaml"
+    args: "tuimux.yaml"
     cwd: "<CONFIG_DIR>"  # Opens config in its own directory
 
   - name: "Log Viewer"
@@ -1841,7 +1841,7 @@ apps:
 
 ### Nested Terminal Sessions
 
-When running tuidoscope inside tmux or screen, or when running tmux/screen inside tuidoscope:
+When running tuimux inside tmux or screen, or when running tmux/screen inside tuimux:
 
 ```yaml
 apps:

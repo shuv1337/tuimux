@@ -2,63 +2,63 @@
 
 ## Introduction
 
-**tuidoscope** is a centralized TUI (Text User Interface) management application designed to organize and run multiple TUI applications within embedded terminal windows. Built with [OpenTUI](https://github.com/opentui/opentui) and SolidJS, it provides a unified interface for your favorite terminal tools, allowing you to switch between them quickly and manage them as a single workspace.
+**tuimux** is a centralized TUI (Text User Interface) management application designed to organize and run multiple TUI applications within embedded terminal windows. Built with [OpenTUI](https://github.com/opentui/opentui) and SolidJS, it provides a unified interface for your favorite terminal tools, allowing you to switch between them quickly and manage them as a single workspace.
 
-By leveraging Ghostty's high-performance terminal emulator, tuidoscope offers a smooth and responsive experience for running everything from simple shells to complex graphical TUIs like `btop` or `lazygit`.
+By leveraging Ghostty's high-performance terminal emulator, tuimux offers a smooth and responsive experience for running everything from simple shells to complex graphical TUIs like `btop` or `lazygit`.
 
 ## Use Cases
 
-Tuidoscope is particularly useful for:
+Tuimux is particularly useful for:
 
 - **System Monitoring:** Keep multiple monitoring tools like `htop`, `btop`, `glances`, or `bandwhich` running in separate tabs for quick access.
 - **Git Workflow Management:** Manage multiple repositories simultaneously using `lazygit`, `tig`, or `gitui` without cluttering your main terminal.
 - **AI-Assisted Development:** Keep AI coding agents like `claude`, `opencode`, or `aider` active in dedicated tabs, ready to assist with your project.
 - **File Management:** Organize different file managers like `yazi`, `ranger`, or `lf` for different projects or tasks.
 - **Infrastructure Management:** Run `k9s` or `lazydocker` in a centralized dashboard to monitor your containers and clusters.
-- **Consolidated Workspace:** Instead of managing multiple terminal tabs or tmux panes manually, tuidoscope provides a structured environment with optional session persistence (enable `session.persist`) to remember your active apps between restarts.
+- **Consolidated Workspace:** Instead of managing multiple terminal tabs or tmux panes manually, tuimux provides a structured environment with optional session persistence (enable `session.persist`) to remember your active apps between restarts.
 
 ## Installation
 
 ### Prerequisites
 
-- **Bun**: Tuidoscope is built on the [Bun](https://bun.sh/) runtime. You must have Bun installed on your system.
+- **Bun**: Tuimux is built on the [Bun](https://bun.sh/) runtime. You must have Bun installed on your system.
 - **Terminal**: A terminal that supports TUI applications (xterm-256color recommended).
 
 ### Quick Start (No Install)
 
-You can run tuidoscope immediately using `bunx` without installing it globally:
+You can run tuimux immediately using `bunx` without installing it globally:
 
 ```bash
-bunx tuidoscope
+bunx tuimux
 ```
 
 ### Global Installation
 
-To install tuidoscope globally on your system:
+To install tuimux globally on your system:
 
 ```bash
-bun install -g tuidoscope
+bun install -g tuimux
 ```
 
 Once installed, you can launch it from any directory:
 
 ```bash
-tuidoscope
+tuimux
 ```
 
 ## First Run
 
-When you launch tuidoscope for the first time without an existing configuration file, you'll see an empty app list. Getting started is simple:
+When you launch tuimux for the first time without an existing configuration file, you'll see an empty app list. Getting started is simple:
 
 1. Press **`t`** to open the Add Tab modal
 2. Choose from a list of detected TUI application presets, or switch to Custom mode to add your own
 3. Select an app with **`Enter`** to add it to your workspace
 
-Tuidoscope will save your configuration to `~/.config/tuidoscope/tuidoscope.yaml` (or your system's equivalent XDG config directory).
+Tuimux will save your configuration to `~/.config/tuimux/tuimux.yaml` (or your system's equivalent XDG config directory).
 
 ### Keyboard Navigation
 
-Tuidoscope uses a simple two-mode keyboard system:
+Tuimux uses a simple two-mode keyboard system:
 
 - **Tabs Mode** (default): Single keystrokes control navigation and app management
   - `j`/`k` - Navigate up/down through the app list
@@ -73,7 +73,7 @@ Tuidoscope uses a simple two-mode keyboard system:
   - `q` - Disconnect (leave apps running)
   - `Q` (Shift+Q) - Quit and stop all apps
 
-Disconnecting keeps the session server running. Launch `tuidoscope` again to reattach.
+Disconnecting keeps the session server running. Launch `tuimux` again to reattach.
 
 - **Terminal Mode**: All input goes to the focused terminal
   - `Ctrl+A` - Switch back to Tabs mode
@@ -86,7 +86,7 @@ Press **`Ctrl+A`** to toggle between Tabs and Terminal mode.
 If you want to get started immediately with a simple shell, you can skip the onboarding wizard and create a minimal configuration file:
 
 ```yaml
-# ~/.config/tuidoscope/tuidoscope.yaml
+# ~/.config/tuimux/tuimux.yaml
 version: 1
 
 apps:

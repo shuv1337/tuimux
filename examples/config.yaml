@@ -1,5 +1,5 @@
-# Example tuidoscope configuration
-# Copy to ~/.config/tuidoscope/tuidoscope.yaml
+# Example tuimux configuration
+# Copy to ~/.config/tuimux/tuimux.yaml
 
 version: 2
 
@@ -22,7 +22,7 @@ theme:
 tab_width: 20
 
 # Application entries
-# Each app can be launched as a tab in tuidoscope
+# Each app can be launched as a tab in tuimux
 apps:
   # Default shell - autostart enabled
   - name: "Shell"
@@ -122,4 +122,4 @@ apps:
 # Session persistence
 session:
   persist: true
-  file: "~/.local/state/tuidoscope/session.yaml"
+  file: "~/.local/state/tuimux/session.yaml"

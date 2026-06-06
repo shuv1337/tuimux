@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { ensureAppEntryIds } from "./config"
+import { ensureAppEntryIds, ConfigSchema } from "./config"
 import { defaultTheme } from "./theme"
 import type { Config } from "../types"
 
@@ -8,12 +8,39 @@ function makeConfig(apps: Config["apps"]): Config {
     version: 2,
     theme: defaultTheme,
     tab_width: 20,
-    layout: "classic",
+    layout: "tabs",
     focus_on_launch: true,
     apps,
     session: { persist: true },
   }
 }
+
+describe("ConfigSchema layout back-compat", () => {
+  test("maps legacy 'classic' layout to 'tabs'", () => {
+    const result = ConfigSchema.parse({ layout: "classic" })
+    expect(result.layout).toBe("tabs")
+  })
+
+  test("maps legacy 'zellij' layout to 'panes'", () => {
+    const result = ConfigSchema.parse({ layout: "zellij" })
+    expect(result.layout).toBe("panes")
+  })
+
+  test("passes through new 'tabs' layout unchanged", () => {
+    const result = ConfigSchema.parse({ layout: "tabs" })
+    expect(result.layout).toBe("tabs")
+  })
+
+  test("passes through new 'panes' layout unchanged", () => {
+    const result = ConfigSchema.parse({ layout: "panes" })
+    expect(result.layout).toBe("panes")
+  })
+
+  test("defaults layout to 'tabs' when omitted", () => {
+    const result = ConfigSchema.parse({})
+    expect(result.layout).toBe("tabs")
+  })
+})
 
 describe("ensureAppEntryIds", () => {
   test("preserves existing ids and reports no update", () => {

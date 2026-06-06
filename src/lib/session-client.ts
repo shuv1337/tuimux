@@ -234,6 +234,19 @@ export async function connectSessionClient(options?: { layout?: LayoutMode }): P
   }
 }
 
+export async function reconnectSessionClient(layout: LayoutMode): Promise<SessionClient> {
+  if (existsSync(SOCKET_PATH)) {
+    try {
+      await unlink(SOCKET_PATH)
+    } catch (unlinkError) {
+      debugLog(`[client] reconnect: failed to remove stale socket: ${unlinkError}`)
+    }
+  }
+  await spawnServerProcess(layout)
+  const socket = await waitForServer()
+  return new SessionClient(socket)
+}
+
 export async function shutdownSessionServer(): Promise<boolean> {
   try {
     const socket = await connectSocket()

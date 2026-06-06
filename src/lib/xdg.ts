@@ -1,7 +1,7 @@
 import { homedir } from "os"
 import { join } from "path"
 
-const APP_NAME = "tuidoscope"
+const APP_NAME = "tuimux"
 
 /**
  * XDG Base Directory Specification paths
@@ -42,7 +42,7 @@ export function getXdgCacheHome(): string {
 
 /**
  * Get app-specific config directory
- * $XDG_CONFIG_HOME/tuidoscope
+ * $XDG_CONFIG_HOME/tuimux
  */
 export function getConfigDir(): string {
   return join(getXdgConfigHome(), APP_NAME)
@@ -50,7 +50,7 @@ export function getConfigDir(): string {
 
 /**
  * Get app-specific data directory
- * $XDG_DATA_HOME/tuidoscope
+ * $XDG_DATA_HOME/tuimux
  */
 export function getDataDir(): string {
   return join(getXdgDataHome(), APP_NAME)
@@ -58,7 +58,7 @@ export function getDataDir(): string {
 
 /**
  * Get app-specific state directory
- * $XDG_STATE_HOME/tuidoscope
+ * $XDG_STATE_HOME/tuimux
  */
 export function getStateDir(): string {
   return join(getXdgStateHome(), APP_NAME)
@@ -66,7 +66,7 @@ export function getStateDir(): string {
 
 /**
  * Get app-specific cache directory
- * $XDG_CACHE_HOME/tuidoscope
+ * $XDG_CACHE_HOME/tuimux
  */
 export function getCacheDir(): string {
   return join(getXdgCacheHome(), APP_NAME)
@@ -77,7 +77,7 @@ export function getCacheDir(): string {
  */
 export const paths = {
   get config() {
-    return join(getConfigDir(), "tuidoscope.yaml")
+    return join(getConfigDir(), "tuimux.yaml")
   },
   get session() {
     return join(getStateDir(), "session.yaml")
@@ -86,6 +86,6 @@ export const paths = {
     return join(getStateDir(), "debug.log")
   },
   get socket() {
-    return join(getStateDir(), "tuidoscope.sock")
+    return join(getStateDir(), "tuimux.sock")
   },
 }

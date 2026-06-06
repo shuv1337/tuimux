@@ -9,13 +9,13 @@ import type { Config, SessionData } from "../types"
 
 describe("session persistence", () => {
   test("saves and restores session data, including legacy format", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "tuidoscope-session-"))
+    const dir = await mkdtemp(join(tmpdir(), "tuimux-session-"))
     const sessionFile = join(dir, "session.yaml")
     const config: Config = {
       version: 2,
       theme: defaultTheme,
       tab_width: 20,
-      layout: "classic",
+      layout: "tabs",
       focus_on_launch: true,
       apps: [],
       session: { persist: true, file: sessionFile },
@@ -61,13 +61,13 @@ describe("session persistence", () => {
   })
 
   test("clears session data", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "tuidoscope-session-"))
+    const dir = await mkdtemp(join(tmpdir(), "tuimux-session-"))
     const sessionFile = join(dir, "session.yaml")
     const config: Config = {
       version: 2,
       theme: defaultTheme,
       tab_width: 20,
-      layout: "classic",
+      layout: "tabs",
       focus_on_launch: true,
       apps: [],
       session: { persist: true, file: sessionFile },

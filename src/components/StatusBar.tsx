@@ -15,7 +15,7 @@ export interface StatusBarProps {
 }
 
 // Hint tiers, ordered widest-first. fitHints() picks the largest set that fits.
-const CLASSIC_TABS: Hint[][] = [
+const TABS_HINTS: Hint[][] = [
   [
     { key: "j/k", label: "nav" },
     { key: "↵", label: "open" },
@@ -37,7 +37,7 @@ const CLASSIC_TABS: Hint[][] = [
   ],
 ]
 
-const ZELLIJ_MANAGER: Hint[][] = [
+const PANES_HINTS: Hint[][] = [
   [
     { key: "space", label: "palette" },
     { key: "n", label: "win" },
@@ -55,18 +55,18 @@ const ZELLIJ_MANAGER: Hint[][] = [
 ]
 
 export const StatusBar: Component<StatusBarProps> = (props) => {
-  const isZellij = () => props.layoutMode === "zellij"
+  const isPanes = () => props.layoutMode === "panes"
 
   const hints = (): Hint[] => {
     if (props.focusMode === "terminal") {
-      return [{ key: "^A", label: isZellij() ? "manager" : "tabs" }]
+      return [{ key: "^A", label: isPanes() ? "panes" : "tabs" }]
     }
-    const tiers = isZellij() ? ZELLIJ_MANAGER : CLASSIC_TABS
+    const tiers = isPanes() ? PANES_HINTS : TABS_HINTS
     return fitHints(props.termWidth ?? 100, tiers)
   }
 
   const modeTag = () =>
-    props.focusMode === "terminal" ? "TERMINAL" : isZellij() ? "MANAGER" : "TABS"
+    props.focusMode === "terminal" ? "TERMINAL" : isPanes() ? "PANES" : "TABS"
 
   return (
     <box height={1} flexDirection="row" backgroundColor={props.theme.surfaceAlt} paddingLeft={1} paddingRight={1}>

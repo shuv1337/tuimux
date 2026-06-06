@@ -1,6 +1,6 @@
 # Troubleshooting
 
-This guide covers common issues and their solutions when using tuidoscope.
+This guide covers common issues and their solutions when using tuimux.
 
 ---
 
@@ -8,12 +8,12 @@ This guide covers common issues and their solutions when using tuidoscope.
 
 ### Issue: Ctrl+C exits the entire app (older versions)
 
-**Symptom:** Pressing `Ctrl+C` in the terminal exits tuidoscope instead of sending SIGINT to the running process.
+**Symptom:** Pressing `Ctrl+C` in the terminal exits tuimux instead of sending SIGINT to the running process.
 
 **Solution:** This was fixed in v0.2.0. Update to the latest version:
 
 ```bash
-bun install -g tuidoscope@latest
+bun install -g tuimux@latest
 ```
 
 ### Current Ctrl+C Behavior
@@ -41,7 +41,7 @@ Press `q` in Tabs Mode to disconnect and keep apps running, or `Q` to quit and s
    ```bash
    echo $TERM
    ```
-   Tuidoscope works best with `xterm-256color`. If your terminal uses a different TERM, you can override it per-app:
+   Tuimux works best with `xterm-256color`. If your terminal uses a different TERM, you can override it per-app:
    ```yaml
    apps:
      - name: "Shell"
@@ -84,13 +84,13 @@ apps:
      # primary: #82aaff    # May cause issues
    ```
 
-2. **Verify config location:** Tuidoscope loads config from:
-   - `./tuidoscope.yaml` (local directory first)
-   - `~/.config/tuidoscope/tuidoscope.yaml`
+2. **Verify config location:** Tuimux loads config from:
+   - `./tuimux.yaml` (local directory first)
+   - `~/.config/tuimux/tuimux.yaml`
 
 3. **Check for syntax errors:**
    ```bash
-   cat ~/.config/tuidoscope/tuidoscope.yaml | python3 -c "import yaml, sys; yaml.safe_load(sys.stdin)"
+   cat ~/.config/tuimux/tuimux.yaml | python3 -c "import yaml, sys; yaml.safe_load(sys.stdin)"
    ```
 
 ### Terminal doesn't support 24-bit color
@@ -125,7 +125,7 @@ Most modern terminals (Alacritty, iTerm2, GNOME Terminal, Konsole, WezTerm, Ghos
        command: "/usr/bin/htop"
    ```
 
-3. **Check PATH in the spawned shell:** Tuidoscope inherits your environment, but some shells may not load `.bashrc`/`.zshrc` in non-interactive mode.
+3. **Check PATH in the spawned shell:** Tuimux inherits your environment, but some shells may not load `.bashrc`/`.zshrc` in non-interactive mode.
 
 ### App starts but immediately exits
 
@@ -154,7 +154,7 @@ Most modern terminals (Alacritty, iTerm2, GNOME Terminal, Konsole, WezTerm, Ghos
 
 ### Session not being restored
 
-**Symptom:** Previously running apps don't restart when reopening tuidoscope.
+**Symptom:** Previously running apps don't restart when reopening tuimux.
 
 **Solutions:**
 
@@ -166,17 +166,17 @@ Most modern terminals (Alacritty, iTerm2, GNOME Terminal, Konsole, WezTerm, Ghos
 
 2. **Check state directory permissions:**
    ```bash
-   ls -la ~/.local/state/tuidoscope/
+   ls -la ~/.local/state/tuimux/
    ```
 
 3. **Verify session file exists:**
    ```bash
-   cat ~/.local/state/tuidoscope/session.yaml
+   cat ~/.local/state/tuimux/session.yaml
    ```
 
 ### Session file location
 
-By default, the session is stored at `~/.local/state/tuidoscope/session.yaml`. You can customize this:
+By default, the session is stored at `~/.local/state/tuimux/session.yaml`. You can customize this:
 
 ```yaml
 session:
@@ -190,16 +190,16 @@ session:
 
 ### Ctrl+A conflicts with terminal emulator
 
-**Symptom:** Pressing `Ctrl+A` triggers a terminal emulator action (e.g., "Select All") instead of toggling focus in tuidoscope.
+**Symptom:** Pressing `Ctrl+A` triggers a terminal emulator action (e.g., "Select All") instead of toggling focus in tuimux.
 
 **Solution:** Disable or rebind the conflicting shortcut in your terminal emulator settings. Most terminal emulators allow customizing keyboard shortcuts.
 
-### Using tuidoscope with tmux/screen
+### Using tuimux with tmux/screen
 
-**Symptom:** `Ctrl+A` is captured by tuidoscope instead of being sent to tmux (which also uses `Ctrl+A` as prefix).
+**Symptom:** `Ctrl+A` is captured by tuimux instead of being sent to tmux (which also uses `Ctrl+A` as prefix).
 
 **Solution:** Double-tap `Ctrl+A` in Terminal Mode to send the literal `Ctrl+A` character to the terminal:
-- First `Ctrl+A` → Captured by tuidoscope (but you're already in terminal mode)
+- First `Ctrl+A` → Captured by tuimux (but you're already in terminal mode)
 - Second `Ctrl+A` within 500ms → Sends `Ctrl+A` to tmux
 
 ### Keys not working in Terminal Mode
@@ -214,13 +214,13 @@ session:
 
 ## FAQ
 
-### How do I quit tuidoscope?
+### How do I quit tuimux?
 
 Press `q` in Tabs Mode to disconnect, or `Q` to quit and stop all apps.
 
 ### How do I stop the background session server?
 
-Run `tuidoscope --shutdown` to terminate the session server and stop all apps. This also clears the persisted session snapshot so apps will not relaunch unless `autostart: true` or `session.persist: true` is explicitly enabled.
+Run `tuimux --shutdown` to terminate the session server and stop all apps. This also clears the persisted session snapshot so apps will not relaunch unless `autostart: true` or `session.persist: true` is explicitly enabled.
 
 ### How do I add a new tab?
 
@@ -234,7 +234,7 @@ Press `Ctrl+A` to toggle between modes.
 
 In Terminal Mode, press `Ctrl+C` - it's passed directly to the terminal and sends SIGINT to the running process.
 
-### Can I use tuidoscope inside tmux?
+### Can I use tuimux inside tmux?
 
 Yes! Both use `Ctrl+A`, so double-tap `Ctrl+A` in Terminal Mode to send it to the nested tmux session.
 
@@ -242,35 +242,35 @@ Yes! Both use `Ctrl+A`, so double-tap `Ctrl+A` in Terminal Mode to send it to th
 
 ```bash
 # Default location:
-~/.config/tuidoscope/tuidoscope.yaml
+~/.config/tuimux/tuimux.yaml
 
 # Or in current directory:
-./tuidoscope.yaml
+./tuimux.yaml
 ```
 
 ### How do I reset to defaults?
 
 Delete or rename your config file:
 ```bash
-mv ~/.config/tuidoscope/tuidoscope.yaml ~/.config/tuidoscope/tuidoscope.yaml.bak
+mv ~/.config/tuimux/tuimux.yaml ~/.config/tuimux/tuimux.yaml.bak
 ```
 
-Then restart tuidoscope - it will start with an empty app list. Press `t` to add apps.
+Then restart tuimux - it will start with an empty app list. Press `t` to add apps.
 
 ---
 
 ## Debug Mode
 
-For detailed debugging output, run tuidoscope with the DEBUG environment variable:
+For detailed debugging output, run tuimux with the TUIMUX_DEBUG environment variable:
 
 ```bash
-DEBUG=1 tuidoscope
+TUIMUX_DEBUG=1 tuimux
 ```
 
 This enables verbose logging to help diagnose issues. The logs are written to stderr and can be captured:
 
 ```bash
-DEBUG=1 tuidoscope 2> debug.log
+TUIMUX_DEBUG=1 tuimux 2> debug.log
 ```
 
 ---
@@ -279,7 +279,7 @@ DEBUG=1 tuidoscope 2> debug.log
 
 If you encounter an issue not covered here:
 
-1. Check the [GitHub Issues](https://github.com/your-username/tuidoscope/issues)
+1. Check the [GitHub Issues](https://github.com/shuv1337/tuimux/issues)
 2. Open a new issue with:
    - Your OS and terminal emulator
    - Steps to reproduce

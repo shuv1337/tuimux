@@ -4,6 +4,7 @@ import { loadConfig } from "./lib/config"
 import { debugLog, enableDebug } from "./lib/debug"
 import { connectSessionClient, shutdownSessionServer } from "./lib/session-client"
 import { startSessionServer } from "./lib/session-server"
+import { migrateLegacyData } from "./lib/migrate"
 import { parseArgs, printHelp, printVersion, printUnknownFlags } from "./lib/cli"
 
 async function main() {
@@ -35,12 +36,16 @@ async function main() {
 
     debugLog("[init] main() started")
 
+    // One-time, idempotent migration of legacy tuidoscope config/state to the
+    // tuimux paths. Must run before any path is resolved (shutdown/server/config).
+    migrateLegacyData()
+
     // Handle --shutdown
     if (options.shutdown) {
       debugLog("[init] Shutdown requested")
       const didShutdown = await shutdownSessionServer()
       if (!didShutdown) {
-        console.error("No running tuidoscope session server found.")
+        console.error("No running tuimux session server found.")
         process.exit(1)
       }
       return
@@ -102,7 +107,7 @@ async function main() {
     try {
       // exitOnCtrlC:false — opentui's built-in handler would call destroy() on
       // Ctrl+C regardless of our keyboard handler. We manage Ctrl+C ourselves so
-      // it passes through to the focused PTY (and is ignored in tabs/manager mode).
+      // it passes through to the focused PTY (and is ignored in tabs/panes mode).
       await render(
         () => (
           <App config={config} sessionClient={sessionClient} startWithAddModal={options.add} />
@@ -130,7 +135,7 @@ async function main() {
   } catch (error) {
     debugLog(`[init] FATAL ERROR: ${error}`)
     debugLog(`[init] Stack: ${error instanceof Error ? error.stack : 'no stack'}`)
-    console.error("Failed to start tuidoscope:", error)
+    console.error("Failed to start tuimux:", error)
     process.exit(1)
   }
 }

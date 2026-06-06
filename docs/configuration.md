@@ -1,13 +1,13 @@
 # Configuration
 
-Tuidoscope is configured using a YAML file named `tuidoscope.yaml`. 
+Tuimux is configured using a YAML file named `tuimux.yaml`. 
 
 ## Configuration File Location
 
-Tuidoscope searches for the configuration file in the following order:
+Tuimux searches for the configuration file in the following order:
 
-1.  **Local Directory**: `./tuidoscope.yaml` (useful for project-specific TUI setups).
-2.  **XDG Config Home**: `~/.config/tuidoscope/tuidoscope.yaml` (default on most Linux/macOS systems).
+1.  **Local Directory**: `./tuimux.yaml` (useful for project-specific TUI setups).
+2.  **XDG Config Home**: `~/.config/tuimux/tuimux.yaml` (default on most Linux/macOS systems).
 
 ## YAML Structure
 
@@ -26,7 +26,7 @@ theme:
 
 # UI settings
 tab_width: 20
-layout: "classic" # classic or zellij
+layout: "tabs" # tabs or panes
 
 # Session management
 session:
@@ -55,7 +55,7 @@ apps:
 The schema version for the configuration file. Current version is `2`.
 
 ### `theme`
-Tuidoscope uses a 5-color palette inspired by the **Night Owl** theme.
+Tuimux uses a 5-color palette inspired by the **Night Owl** theme.
 
 | Property | Color | Hex | Description |
 |----------|-------|-----|-------------|
@@ -76,13 +76,13 @@ For reference, these are the base colors used in the default theme:
 - **Cyan:** `#7fdbca`
 
 ### `tab_width`
-(Default: `20`) The width of the tab list in the classic UI.
+(Default: `20`) The width of the tab list in the tabs UI.
 
 ### `layout`
-(Default: `classic`) Selects the UI layout.
-- `classic`: Sidebar app list + single terminal pane.
-- `zellij`: Experimental multiplexer layout with window tabs on the bottom and split panes. Each pane spawns its own terminal.
-Runtime override: `tuidoscope --layout zellij`.
+(Default: `tabs`) Selects the UI layout.
+- `tabs`: Sidebar app list + single terminal pane.
+- `panes`: Experimental multiplexer layout with window tabs on the bottom and split panes. Each pane spawns its own terminal.
+Runtime override: `tuimux --layout panes`.
 
 ### `apps`
 Each app entry defines a TUI application to be managed.
@@ -91,21 +91,21 @@ Each app entry defines a TUI application to be managed.
 - `command`: The executable to run.
 - `args`: (Optional) String of arguments to pass to the command.
 - `cwd`: (Default: `~`) Initial working directory. Supports `~`, `<CONFIG_DIR>`, and `<STATE_DIR>` placeholders.
-- `autostart`: (Default: `false`) If true, the app starts automatically when tuidoscope launches.
+- `autostart`: (Default: `false`) If true, the app starts automatically when tuimux launches.
 - `restart_on_exit`: (Default: `false`) If true, the app will automatically respawn if it exits.
 - `env`: (Optional) Key-value pairs of environment variables for the app.
 
 ### `session`
-- `persist`: (Default: `false`) If true, tuidoscope remembers which apps were running and their state between restarts.
+- `persist`: (Default: `false`) If true, tuimux remembers which apps were running and their state between restarts.
 - `file`: Custom path for the session state file. Supports `<STATE_DIR>` placeholder.
 
-`tuidoscope --shutdown` clears the persisted session snapshot so only apps marked `autostart: true` relaunch.
+`tuimux --shutdown` clears the persisted session snapshot so only apps marked `autostart: true` relaunch.
 
 ## Path Placeholders
 The following placeholders can be used in `cwd`, `args`, and `session.file`:
 - `~`: Expanded to the user's home directory.
-- `<CONFIG_DIR>`: The directory containing the active `tuidoscope.yaml`.
-- `<STATE_DIR>`: The XDG state directory (usually `~/.local/state/tuidoscope/`).
+- `<CONFIG_DIR>`: The directory containing the active `tuimux.yaml`.
+- `<STATE_DIR>`: The XDG state directory (usually `~/.local/state/tuimux/`).
 
 ## See Also
 

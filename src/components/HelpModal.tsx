@@ -46,12 +46,13 @@ const TABS_GROUPS: Group[] = [
     shortcuts: [
       { keys: "q", label: "Detach session" },
       { keys: "Q", label: "Quit / shutdown" },
+      { keys: "Shift+L", label: "Switch layout" },
       { keys: "?", label: "Toggle this help" },
     ],
   },
 ]
 
-const ZELLIJ_GROUPS: Group[] = [
+const PANES_GROUPS: Group[] = [
   {
     title: "Panes",
     shortcuts: [
@@ -75,6 +76,7 @@ const ZELLIJ_GROUPS: Group[] = [
       { keys: "t", label: "Add new app" },
       { keys: "Space", label: "Command palette" },
       { keys: "Ctrl+A", label: "Toggle terminal focus" },
+      { keys: "Shift+L", label: "Switch layout" },
       { keys: "q / Q", label: "Detach / quit" },
       { keys: "?", label: "Toggle this help" },
     ],
@@ -108,11 +110,11 @@ export const HelpModal: Component<HelpModalProps> = (props) => {
   })
 
   const allGroups = () => [
-    ...(props.layoutMode === "zellij" ? ZELLIJ_GROUPS : TABS_GROUPS),
+    ...(props.layoutMode === "panes" ? PANES_GROUPS : TABS_GROUPS),
     ...MODAL_GROUPS,
   ]
   const modeLabel = () =>
-    props.layoutMode === "zellij" ? "Manager" : "Tabs"
+    props.layoutMode === "panes" ? "Panes" : "Tabs"
 
   // Split groups across two balanced columns.
   const leftColumn = () => allGroups().filter((_, i) => i % 2 === 0)
