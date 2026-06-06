@@ -66,9 +66,26 @@ async function main() {
       process.exit(1)
     }
     
-    // Register the ghostty-terminal component
+    // Register the ghostty-terminal component.
+    //
+    // We force persistent (stateful) mode. The OpenTUI reconciler constructs
+    // renderables with only `{ id }` and applies the rest of the props via
+    // setters afterwards — but `persistent` can only be enabled at construction
+    // time (its setter is a no-op). So we inject it here via a subclass.
+    //
+    // Persistent mode is what makes full-screen TUIs (Claude Code, btop, …)
+    // render correctly: we feed PTY deltas into a stateful grid instead of
+    // re-parsing an ever-growing, char-capped ANSI string each frame. The old
+    // stateless path sliced the raw byte stream mid-escape-sequence (producing
+    // artifacts like a literal "5m") and dropped cursor-positioning gaps (the
+    // collapsed/squished whitespace). See TerminalPane/PaneView for the feed.
     debugLog("[init] Calling extend() to register ghostty-terminal...")
-    extend({ "ghostty-terminal": GhosttyTerminalRenderable })
+    class PersistentGhosttyTerminal extends GhosttyTerminalRenderable {
+      constructor(ctx: any, options: any) {
+        super(ctx, { ...options, persistent: true })
+      }
+    }
+    extend({ "ghostty-terminal": PersistentGhosttyTerminal as any })
     debugLog("[init] extend() completed")
     
     // Load configuration

@@ -62,6 +62,13 @@ export interface RunningApp {
   status: AppStatus
   buffer: string
   runId: number
+  /**
+   * Monotonic count of total output bytes ever received for this run. Unlike
+   * `buffer.length` (which front-trims at the cap), this never decreases, so
+   * the renderer can compute exactly which tail of `buffer` is new and feed
+   * only that delta to the persistent terminal. Absent until the first chunk.
+   */
+  seq?: number
 }
 
 export interface RunningPane {
@@ -70,6 +77,8 @@ export interface RunningPane {
   status: AppStatus
   buffer: string
   runId: number
+  /** See {@link RunningApp.seq}. */
+  seq?: number
 }
 
 export interface WindowState {

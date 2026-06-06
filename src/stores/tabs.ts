@@ -84,8 +84,9 @@ export function createTabsStore() {
       const app = apps.get(id)
       if (app) {
         const nextBuffer = (app.buffer + data).slice(-MAX_BUFFER_CHARS)
+        const nextSeq = (app.seq ?? app.buffer.length) + data.length
         const newApps = new Map(apps)
-        newApps.set(id, { ...app, buffer: nextBuffer })
+        newApps.set(id, { ...app, buffer: nextBuffer, seq: nextSeq })
         return newApps
       }
       return apps

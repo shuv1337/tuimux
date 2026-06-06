@@ -101,7 +101,8 @@ export function createWindowsStore() {
       if (!pane) return current
       const next = new Map(current)
       const nextBuffer = (pane.buffer + data).slice(-MAX_BUFFER_CHARS)
-      next.set(paneId, { ...pane, buffer: nextBuffer })
+      const nextSeq = (pane.seq ?? pane.buffer.length) + data.length
+      next.set(paneId, { ...pane, buffer: nextBuffer, seq: nextSeq })
       return next
     })
   }

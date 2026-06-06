@@ -1,5 +1,6 @@
-import { Component, Show } from "solid-js"
+import { Component, Show, createEffect } from "solid-js"
 import type { RunningApp, ThemeConfig } from "../types"
+import { createTerminalFeeder, type TerminalFeedSource } from "../lib/terminal-feed"
 
 export interface TerminalPaneProps {
   runningApp: RunningApp | undefined
@@ -13,6 +14,15 @@ export interface TerminalPaneProps {
 export const TerminalPane: Component<TerminalPaneProps> = (props) => {
   const contentWidth = () => Math.max(1, props.width - 2)
   const contentHeight = () => Math.max(1, props.height - 3)
+
+  const feeder = createTerminalFeeder()
+  const source = (): TerminalFeedSource | undefined => {
+    const app = props.runningApp
+    if (!app) return undefined
+    return { buffer: app.buffer, seq: app.seq, key: `${app.entry.id}:${app.runId}` }
+  }
+  // Feed new output as it arrives (source() reads buffer/seq reactively).
+  createEffect(() => feeder.sync(source()))
 
   return (
     <box
@@ -44,10 +54,10 @@ export const TerminalPane: Component<TerminalPaneProps> = (props) => {
               </text>
             </box>
 
-            {/* Terminal content */}
+            {/* Terminal content — persistent mode, fed deltas via the feeder. */}
             <box width={contentWidth()} height={contentHeight()} overflow="hidden">
               <ghostty-terminal
-                ansi={app().buffer}
+                ref={(el: any) => feeder.attach(el, source())}
                 cols={contentWidth()}
                 rows={contentHeight()}
                 showCursor

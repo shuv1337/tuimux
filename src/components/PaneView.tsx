@@ -1,5 +1,6 @@
-import { Component, Show } from "solid-js"
+import { Component, Show, createEffect } from "solid-js"
 import type { RunningPane, ThemeConfig } from "../types"
+import { createTerminalFeeder, type TerminalFeedSource } from "../lib/terminal-feed"
 
 export interface PaneViewProps {
   pane: RunningPane | undefined
@@ -12,6 +13,14 @@ export interface PaneViewProps {
 export const PaneView: Component<PaneViewProps> = (props) => {
   const contentWidth = () => Math.max(1, props.width - 2)
   const contentHeight = () => Math.max(1, props.height - 3)
+
+  const feeder = createTerminalFeeder()
+  const source = (): TerminalFeedSource | undefined => {
+    const pane = props.pane
+    if (!pane) return undefined
+    return { buffer: pane.buffer, seq: pane.seq, key: `${pane.paneId}:${pane.runId}` }
+  }
+  createEffect(() => feeder.sync(source()))
 
   return (
     <box
@@ -39,7 +48,7 @@ export const PaneView: Component<PaneViewProps> = (props) => {
             </box>
             <box width={contentWidth()} height={contentHeight()} overflow="hidden">
               <ghostty-terminal
-                ansi={pane().buffer}
+                ref={(el: any) => feeder.attach(el, source())}
                 cols={contentWidth()}
                 rows={contentHeight()}
                 showCursor
