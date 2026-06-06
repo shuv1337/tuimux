@@ -100,9 +100,15 @@ async function main() {
     // Render the app using opentui/solid
     debugLog("[init] Calling render()...")
     try {
-      await render(() => (
-        <App config={config} sessionClient={sessionClient} startWithAddModal={options.add} />
-      ))
+      // exitOnCtrlC:false — opentui's built-in handler would call destroy() on
+      // Ctrl+C regardless of our keyboard handler. We manage Ctrl+C ourselves so
+      // it passes through to the focused PTY (and is ignored in tabs/manager mode).
+      await render(
+        () => (
+          <App config={config} sessionClient={sessionClient} startWithAddModal={options.add} />
+        ),
+        { exitOnCtrlC: false },
+      )
       debugLog("[init] render() completed")
     } catch (renderError) {
       debugLog(`[init] ERROR in render(): ${renderError}`)
