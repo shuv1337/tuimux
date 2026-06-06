@@ -28,6 +28,8 @@ export interface Config {
   theme: ThemeConfig
   tab_width: number
   layout: LayoutMode
+  /** Move keyboard focus into the app's pane automatically when it launches. */
+  focus_on_launch: boolean
   apps: AppEntryConfig[]
   session: SessionConfig
 }

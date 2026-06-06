@@ -1,11 +1,11 @@
 import { Component, For, Show, createEffect, createMemo, createSignal } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { ThemeConfig } from "../types"
 import { THEME_PRESETS, getCurrentThemeId, type ThemePreset } from "../lib/themes"
+import { resolveTheme, type Palette } from "../lib/palette"
 import { DialogBox } from "./DialogBox"
 
 export interface ThemePickerProps {
-  theme: ThemeConfig
+  theme: Palette
   onSelect: (themeId: string) => void
   onClose: () => void
 }
@@ -80,43 +80,41 @@ export const ThemePicker: Component<ThemePickerProps> = (props) => {
   })
 
   return (
-    <DialogBox theme={props.theme} top="25%" left="25%" width="50%" height={DIALOG_HEIGHT}>
+    <DialogBox theme={props.theme} width="50%" height={DIALOG_HEIGHT}>
+      {/* Title */}
+      <box height={1} paddingLeft={2}>
+        <text fg={props.theme.accent}>
+          <b>Themes</b>
+        </text>
+      </box>
+
       {/* Search input */}
-      <box
-        height={3}
-        flexDirection="row"
-        borderStyle="single"
-        borderColor={props.theme.muted}
-        paddingLeft={1}
-        paddingRight={1}
-      >
-        <box height={1} flexDirection="row" flexGrow={1}>
-          <text fg={props.theme.muted}>{"> "}</text>
-          <input
-            height={1}
-            flexGrow={1}
-            value={query()}
-            focused
-            backgroundColor={props.theme.background}
-            textColor={props.theme.foreground}
-            focusedBackgroundColor={props.theme.background}
-            focusedTextColor={props.theme.foreground}
-            placeholder="Filter themes..."
-            placeholderColor={props.theme.muted}
-            cursorColor={props.theme.accent}
-            onInput={(value) => setQuery(value)}
-            onSubmit={() => handleSelect(filteredThemes()[selectedIndex()])}
-          />
-        </box>
+      <box height={1} flexDirection="row" paddingLeft={2} paddingRight={2}>
+        <text fg={props.theme.textDim}>{"› "}</text>
+        <input
+          height={1}
+          flexGrow={1}
+          value={query()}
+          focused
+          backgroundColor={props.theme.surface}
+          textColor={props.theme.text}
+          focusedBackgroundColor={props.theme.surface}
+          focusedTextColor={props.theme.text}
+          placeholder="Filter themes..."
+          placeholderColor={props.theme.textDim}
+          cursorColor={props.theme.accent}
+          onInput={(value) => setQuery(value)}
+          onSubmit={() => handleSelect(filteredThemes()[selectedIndex()])}
+        />
       </box>
 
       {/* Theme list */}
-      <box flexDirection="column" flexGrow={1} overflow="hidden">
+      <box flexDirection="column" flexGrow={1} overflow="hidden" paddingRight={2}>
         <Show
           when={filteredThemes().length > 0}
           fallback={
             <box flexGrow={1} justifyContent="center" alignItems="center">
-              <text fg={props.theme.muted}>No matching themes.</text>
+              <text fg={props.theme.textDim}>No matching themes.</text>
             </box>
           }
         >
@@ -125,22 +123,22 @@ export const ThemePicker: Component<ThemePickerProps> = (props) => {
               const actualIndex = () => scrollOffset() + index()
               const isSelected = () => actualIndex() === selectedIndex()
               const isCurrent = () => theme.id === currentThemeId()
+              const swatch = createMemo(() => resolveTheme(theme))
               return (
-                <box height={1} flexDirection="row">
-                  <text
-                    fg={
-                      isSelected()
-                        ? props.theme.background
-                        : isCurrent()
-                          ? props.theme.accent
-                          : props.theme.foreground
-                    }
-                    bg={isSelected() ? props.theme.primary : undefined}
-                  >
-                    {isCurrent() ? " [*] " : " [ ] "}
-                    {theme.name.padEnd(18)}
-                    {theme.id}
+                <box height={1} flexDirection="row" backgroundColor={isSelected() ? props.theme.surfaceAlt : undefined}>
+                  {/* accent rail */}
+                  <box width={1} height={1} backgroundColor={isSelected() ? props.theme.accent : undefined} />
+                  <text fg={isCurrent() ? props.theme.accent : props.theme.textDim}>
+                    {isCurrent() ? " ✓ " : "   "}
                   </text>
+                  <text fg={isSelected() || isCurrent() ? props.theme.text : props.theme.textDim}>
+                    {theme.name.padEnd(18)}
+                  </text>
+                  {/* live swatch of the resolved ramp */}
+                  <text fg={swatch().accent}>●</text>
+                  <text fg={swatch().on}>●</text>
+                  <text fg={swatch().warn}>●</text>
+                  <text fg={swatch().error}>●</text>
                 </box>
               )
             }}
@@ -149,19 +147,21 @@ export const ThemePicker: Component<ThemePickerProps> = (props) => {
       </box>
 
       {/* Footer hints */}
-      <box
-        height={3}
-        borderStyle="single"
-        borderColor={props.theme.muted}
-        paddingLeft={1}
-        paddingRight={1}
-      >
-        <box height={1}>
-          <text fg={props.theme.muted}>
-            Enter:Select | Esc:Close | Up/Down:Navigate | j/k:Navigate
-          </text>
-        </box>
+      <box height={1} flexDirection="row" paddingLeft={2}>
+        <Hint theme={props.theme} keyLabel="↵" desc="select" />
+        <Hint theme={props.theme} keyLabel="↑↓" desc="nav" />
+        <Hint theme={props.theme} keyLabel="esc" desc="close" />
       </box>
     </DialogBox>
   )
 }
+
+const Hint: Component<{ theme: Palette; keyLabel: string; desc: string }> = (props) => (
+  <>
+    <text fg={props.theme.accent}>
+      {"  "}
+      <b>{props.keyLabel}</b>
+    </text>
+    <text fg={props.theme.textDim}>{" " + props.desc}</text>
+  </>
+)

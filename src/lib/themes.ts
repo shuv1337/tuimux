@@ -12,6 +12,15 @@ export function isValidHexColor(color: string): boolean {
 
 export const THEME_PRESETS: ThemePreset[] = [
   {
+    id: "graphite",
+    name: "Graphite",
+    primary: "#7fd1ff",     // Cyan - selections, highlights
+    background: "#111315",  // Near-black graphite
+    foreground: "#f2f4f6",  // Neutral white text
+    accent: "#7fd1ff",      // Cyan - active indicators
+    muted: "#9aa4af",       // Cool gray for inactive elements
+  },
+  {
     id: "night-owl",
     name: "Night Owl",
     primary: "#82aaff",

@@ -20,6 +20,8 @@ import { saveConfig } from "./lib/config"
 import { matchesKeybind } from "./lib/keybinds"
 import { debugLog } from "./lib/debug"
 import { getThemeById } from "./lib/themes"
+import { resolveTheme } from "./lib/palette"
+import { widthMode } from "./lib/width-layout"
 import { computePaneRects, collectPaneIds } from "./lib/layout"
 import type { SessionClient } from "./lib/session-client"
 import type { RunningAppSnapshot, RunningPaneSnapshot, ServerMessage, WindowSnapshot } from "./lib/ipc"
@@ -54,6 +56,12 @@ export const App: Component<AppProps> = (props) => {
   const [lastGTime, setLastGTime] = createSignal(0)
   const [currentTheme, setCurrentTheme] = createSignal<ThemeConfig>(props.config.theme)
 
+  // Derive the rich graphite-style palette from the 5-token theme (memoized).
+  const palette = createMemo(() => resolveTheme(currentTheme()))
+
+  // Responsive width mode (full / compact / minimum) drives chrome + sidebar collapse.
+  const layoutWidthMode = createMemo(() => widthMode(terminalDims().width))
+
   // Double-tap Ctrl+A detection for passthrough
   let lastCtrlATime = 0
 
@@ -62,9 +70,12 @@ export const App: Component<AppProps> = (props) => {
 
   const isZellijLayout = () => layoutMode() === "zellij"
 
+  const classicSidebarWidth = () =>
+    layoutWidthMode() === "minimum" ? 0 : props.config.tab_width
+
   const getClassicPtyDimensions = () => {
     const dims = terminalDims()
-    const cols = dims.width - props.config.tab_width - 2
+    const cols = dims.width - classicSidebarWidth() - 2
     const rows = dims.height - 4
     return { cols, rows }
   }
@@ -73,6 +84,17 @@ export const App: Component<AppProps> = (props) => {
     tabsStore.setActiveTab(id)
     if (options.broadcast) {
       props.sessionClient.setActiveTab(id)
+    }
+  }
+
+  // When an app launches, optionally jump focus straight into its pane so the
+  // user can start typing immediately (configurable via focus_on_launch).
+  const focusPaneOnLaunch = () => {
+    if (!props.config.focus_on_launch) return
+    if (isZellijLayout()) {
+      windowsStore.setFocusMode("terminal")
+    } else {
+      tabsStore.setFocusMode("terminal")
     }
   }
 
@@ -93,6 +115,7 @@ export const App: Component<AppProps> = (props) => {
 
     props.sessionClient.start(entry)
     setActiveTab(entry.id, { broadcast: true })
+    focusPaneOnLaunch()
     uiStore.showTemporaryMessage(`Started: ${entry.name}`)
   }
 
@@ -174,6 +197,7 @@ export const App: Component<AppProps> = (props) => {
 
     if (isZellijLayout()) {
       props.sessionClient.createWindow(entry)
+      focusPaneOnLaunch()
       return
     }
 
@@ -980,26 +1004,28 @@ export const App: Component<AppProps> = (props) => {
         when={isZellijLayout()}
         fallback={
           <box flexDirection="row" flexGrow={1}>
-            <TabList
-              entries={appsStore.store.entries}
-              activeTabId={tabsStore.store.activeTabId}
-              selectedIndex={selectedIndex()}
-              getStatus={getAppStatus}
-              isFocused={tabsStore.store.focusMode === "tabs"}
-              width={props.config.tab_width}
-              height={terminalDims().height - 1}
-              scrollOffset={tabsStore.store.scrollOffset}
-              theme={currentTheme()}
-              onSelect={handleSelectApp}
-              onAddClick={() => uiStore.openModal("add-tab")}
-            />
+            <Show when={layoutWidthMode() !== "minimum"}>
+              <TabList
+                entries={appsStore.store.entries}
+                activeTabId={tabsStore.store.activeTabId}
+                selectedIndex={selectedIndex()}
+                getStatus={getAppStatus}
+                isFocused={tabsStore.store.focusMode === "tabs"}
+                width={props.config.tab_width}
+                height={terminalDims().height - 1}
+                scrollOffset={tabsStore.store.scrollOffset}
+                theme={palette()}
+                onSelect={handleSelectApp}
+                onAddClick={() => uiStore.openModal("add-tab")}
+              />
+            </Show>
 
             <TerminalPane
               runningApp={activeRunningApp()}
               isFocused={tabsStore.store.focusMode === "terminal"}
-              width={terminalDims().width - props.config.tab_width}
+              width={terminalDims().width - classicSidebarWidth()}
               height={terminalDims().height - 1}
-              theme={currentTheme()}
+              theme={palette()}
               onInput={handleTerminalInput}
             />
           </box>
@@ -1012,12 +1038,12 @@ export const App: Component<AppProps> = (props) => {
             activePaneId={windowsStore.store.activePaneId}
             width={terminalDims().width}
             height={terminalDims().height - 2}
-            theme={currentTheme()}
+            theme={palette()}
           />
           <WindowBar
             windows={windowsStore.store.windows}
             activeWindowId={windowsStore.store.activeWindowId}
-            theme={currentTheme()}
+            theme={palette()}
             onSelect={activateWindow}
           />
         </box>
@@ -1033,15 +1059,17 @@ export const App: Component<AppProps> = (props) => {
         appStatus={isZellijLayout() ? activeRunningPane()?.status ?? null : activeRunningApp()?.status ?? null}
         focusMode={isZellijLayout() ? windowsStore.store.focusMode : tabsStore.store.focusMode}
         message={uiStore.store.statusMessage}
-        theme={currentTheme()}
+        theme={palette()}
         layoutMode={layoutMode()}
+        widthMode={layoutWidthMode()}
+        termWidth={terminalDims().width}
       />
 
       {/* Modals */}
       <Show when={uiStore.store.activeModal === "command-palette"}>
         <CommandPalette
           entries={appsStore.store.entries}
-          theme={currentTheme()}
+          theme={palette()}
           onSelect={(entry, action) => {
             if (action === "edit") {
               openEditModal(entry.id)
@@ -1057,6 +1085,7 @@ export const App: Component<AppProps> = (props) => {
             if (isZellijLayout()) {
               if (action === "switch") {
                 props.sessionClient.createWindow(entry)
+                focusPaneOnLaunch()
                 return
               }
               if (action === "stop") {
@@ -1092,7 +1121,7 @@ export const App: Component<AppProps> = (props) => {
 
       <Show when={uiStore.store.activeModal === "add-tab"}>
         <AddTabModal
-          theme={currentTheme()}
+          theme={palette()}
           onAdd={handleAddApp}
           onClose={() => uiStore.closeModal()}
         />
@@ -1100,7 +1129,7 @@ export const App: Component<AppProps> = (props) => {
 
       <Show when={uiStore.store.activeModal === "edit-app" && editingEntry()}>
         <EditAppModal
-          theme={currentTheme()}
+          theme={palette()}
           entry={editingEntry()!}
           onSave={(updates) => handleEditApp(editingEntry()!.id, updates)}
           onDelete={() => {
@@ -1117,7 +1146,7 @@ export const App: Component<AppProps> = (props) => {
 
       <Show when={uiStore.store.activeModal === "confirm-delete" && deletingEntry()}>
         <ConfirmDialog
-          theme={currentTheme()}
+          theme={palette()}
           title="Delete app?"
           message={`Delete "${deletingEntry()!.name}" from your app list?`}
           detail="This removes it from your config. (it can be re-added later)"
@@ -1130,7 +1159,7 @@ export const App: Component<AppProps> = (props) => {
 
       <Show when={uiStore.store.activeModal === "help"}>
         <HelpModal
-          theme={currentTheme()}
+          theme={palette()}
           layoutMode={layoutMode()}
           onClose={() => uiStore.closeModal()}
         />
@@ -1138,7 +1167,7 @@ export const App: Component<AppProps> = (props) => {
 
       <Show when={uiStore.store.activeModal === "theme-picker"}>
         <ThemePicker
-          theme={currentTheme()}
+          theme={palette()}
           onSelect={(themeId) => {
             void handleThemeChange(themeId)
           }}

@@ -1,6 +1,7 @@
 import { Component, For, createSignal, createMemo, createEffect } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { AppEntry, ThemeConfig } from "../types"
+import type { AppEntry } from "../types"
+import type { Palette } from "../lib/palette"
 import { createAppSearch } from "../lib/fuzzy"
 import { buildEntryCommand } from "../lib/command"
 import { getVisibleWindowOffset } from "../lib/list-window"
@@ -11,7 +12,7 @@ export type GlobalAction = { type: "open_theme_picker" }
 
 export interface CommandPaletteProps {
   entries: AppEntry[]
-  theme: ThemeConfig
+  theme: Palette
   onSelect: (entry: AppEntry, action: CommandAction) => void
   onGlobalAction?: (action: GlobalAction) => void
   onClose: () => void
@@ -158,75 +159,63 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
   })
 
   return (
-    <DialogBox
-      theme={props.theme}
-      top="20%"
-      left="20%"
-      width="60%"
-      height="60%"
-    >
+    <DialogBox theme={props.theme} width="60%" height="60%">
       {/* Search input */}
-      <box
-        height={3}
-        flexDirection="row"
-        borderStyle="single"
-        borderColor={props.theme.muted}
-        paddingLeft={1}
-        paddingRight={1}
-      >
-        <box height={1} flexDirection="row" flexGrow={1}>
-          <text fg={props.theme.muted}>{"> "}</text>
-          <input
-            height={1}
-            flexGrow={1}
-            value={query()}
-            focused
-            backgroundColor={props.theme.background}
-            textColor={props.theme.foreground}
-            focusedBackgroundColor={props.theme.background}
-            focusedTextColor={props.theme.foreground}
-            placeholder="Search apps or commands..."
-            placeholderColor={props.theme.muted}
-            cursorColor={props.theme.accent}
-            onInput={(value) => setQuery(value)}
-            onSubmit={() => {
-              const selected = results()[selectedIndex()]
-              if (selected) {
-                handleSelect(selected, "switch")
-              }
-            }}
-          />
-        </box>
+      <box height={1} flexDirection="row" paddingLeft={2} paddingRight={2}>
+        <text fg={props.theme.textDim}>{"› "}</text>
+        <input
+          height={1}
+          flexGrow={1}
+          value={query()}
+          focused
+          backgroundColor={props.theme.surface}
+          textColor={props.theme.text}
+          focusedBackgroundColor={props.theme.surface}
+          focusedTextColor={props.theme.text}
+          placeholder="Search apps or commands..."
+          placeholderColor={props.theme.textDim}
+          cursorColor={props.theme.accent}
+          onInput={(value) => setQuery(value)}
+          onSubmit={() => {
+            const selected = results()[selectedIndex()]
+            if (selected) {
+              handleSelect(selected, "switch")
+            }
+          }}
+        />
       </box>
 
+      <box height={1} />
+
       {/* Results list */}
-      <box flexDirection="column" flexGrow={1} overflow="hidden">
+      <box flexDirection="column" flexGrow={1} overflow="hidden" paddingRight={2}>
         <For each={visibleResults()}>
           {(result, index) => {
             const actualIndex = () => visibleOffset() + index()
             const isSelected = () => actualIndex() === selectedIndex()
             const displayText = () => {
               if (result.type === "command") {
-                return `[Cmd] ${result.command.name}`
+                return result.command.name
               }
-              return `${result.item.name} - ${buildEntryCommand(result.item)}`
+              return `${result.item.name} — ${buildEntryCommand(result.item)}`
             }
             const isCommand = () => result.type === "command"
-            
+
             return (
               <box
                 height={1}
                 width="100%"
                 flexDirection="row"
-                backgroundColor={isSelected() ? props.theme.primary : props.theme.background}
+                backgroundColor={isSelected() ? props.theme.surfaceAlt : undefined}
                 onMouseDown={() => handleSelect(result, "switch")}
               >
+                {/* accent rail */}
+                <box width={1} height={1} backgroundColor={isSelected() ? props.theme.accent : undefined} />
                 <text
                   width="100%"
-                  fg={isSelected() ? props.theme.background : (isCommand() ? props.theme.accent : props.theme.foreground)}
-                  bg={isSelected() ? props.theme.primary : props.theme.background}
+                  fg={isCommand() ? props.theme.accent : (isSelected() ? props.theme.text : props.theme.textDim)}
                 >
-                  {" "}{displayText()}
+                  {(isCommand() ? " ⌘ " : " ")}{displayText()}
                 </text>
               </box>
             )
@@ -235,19 +224,23 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       </box>
 
       {/* Footer hints */}
-      <box
-        height={3}
-        borderStyle="single"
-        borderColor={props.theme.muted}
-        paddingLeft={1}
-        paddingRight={1}
-      >
-        <box height={1}>
-          <text fg={props.theme.muted}>
-            Enter:Select | x:Stop | Ctrl+E:Edit | Ctrl+R:Delete | Esc:Close | ↑↓:Navigate
-          </text>
-        </box>
+      <box height={1} flexDirection="row" paddingLeft={2} paddingRight={2}>
+        <Hint theme={props.theme} keyLabel="↵" desc="select" />
+        <Hint theme={props.theme} keyLabel="x" desc="stop" />
+        <Hint theme={props.theme} keyLabel="^E" desc="edit" />
+        <Hint theme={props.theme} keyLabel="^R" desc="delete" />
+        <Hint theme={props.theme} keyLabel="esc" desc="close" />
       </box>
     </DialogBox>
   )
 }
+
+const Hint: Component<{ theme: Palette; keyLabel: string; desc: string }> = (props) => (
+  <>
+    <text fg={props.theme.accent}>
+      {"  "}
+      <b>{props.keyLabel}</b>
+    </text>
+    <text fg={props.theme.textDim}>{" " + props.desc}</text>
+  </>
+)

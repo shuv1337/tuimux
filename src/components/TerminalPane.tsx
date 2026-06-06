@@ -1,5 +1,6 @@
 import { Component, Show, createEffect } from "solid-js"
-import type { RunningApp, ThemeConfig } from "../types"
+import type { RunningApp } from "../types"
+import type { Palette } from "../lib/palette"
 import { createTerminalFeeder, type TerminalFeedSource } from "../lib/terminal-feed"
 
 export interface TerminalPaneProps {
@@ -7,7 +8,7 @@ export interface TerminalPaneProps {
   isFocused: boolean
   width: number
   height: number
-  theme: ThemeConfig
+  theme: Palette
   onInput?: (data: string) => void
 }
 
@@ -30,13 +31,13 @@ export const TerminalPane: Component<TerminalPaneProps> = (props) => {
       flexGrow={1}
       height={props.height}
       borderStyle="single"
-      borderColor={props.isFocused ? props.theme.primary : props.theme.muted}
+      borderColor={props.isFocused ? props.theme.borderFocus : props.theme.border}
     >
       <Show
         when={props.runningApp}
         fallback={
           <box flexGrow={1} justifyContent="center" alignItems="center">
-            <text fg={props.theme.muted}>
+            <text fg={props.theme.textDim}>
               No app selected. Press 't' to add one.
             </text>
           </box>
@@ -45,11 +46,11 @@ export const TerminalPane: Component<TerminalPaneProps> = (props) => {
         {(app) => (
           <box flexDirection="column" flexGrow={1}>
             {/* Terminal header */}
-            <box height={1} flexDirection="row">
+            <box height={1} flexDirection="row" backgroundColor={props.theme.surface}>
               <text fg={props.theme.accent}>
                 <b>{app().entry.name}</b>
               </text>
-              <text fg={props.theme.muted}>
+              <text fg={props.theme.textDim}>
                 {" "}({app().status})
               </text>
             </box>

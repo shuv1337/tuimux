@@ -21,14 +21,14 @@ export interface LoadConfigResult {
 const LOCAL_CONFIG_PATH = "./tuidoscope.yaml"
 
 // Zod schema for validation
-// Default theme: Night Owl (https://github.com/sdras/night-owl-vscode-theme)
-// Ghostty port: https://github.com/m1yon/ghostty-night-owl
+// Default theme: Graphite (tight dark surface ramp + sparse cyan accent).
+// The rich palette is derived at runtime in src/lib/palette.ts.
 const ThemeSchema = z.object({
-  primary: z.string().default("#82aaff"),     // Blue - selections, highlights
-  background: z.string().default("#011627"),  // Deep dark blue
-  foreground: z.string().default("#d6deeb"),  // Light gray-blue text
-  accent: z.string().default("#7fdbca"),      // Cyan/teal - active indicators
-  muted: z.string().default("#637777"),       // Gray-blue for inactive elements
+  primary: z.string().default("#7fd1ff"),     // Cyan - selections, highlights
+  background: z.string().default("#111315"),  // Near-black graphite
+  foreground: z.string().default("#f2f4f6"),  // Neutral white text
+  accent: z.string().default("#7fd1ff"),      // Cyan - active indicators
+  muted: z.string().default("#9aa4af"),       // Cool gray for inactive elements
 })
 
 const AppEntrySchema = z.object({
@@ -53,6 +53,8 @@ const ConfigSchema = z.object({
   theme: ThemeSchema.default({}),
   tab_width: z.number().default(20),
   layout: z.enum(["classic", "zellij"]).default("classic"),
+  // Move focus into the app's pane automatically when it launches.
+  focus_on_launch: z.boolean().default(true),
   apps: z.array(AppEntrySchema).default([]),
   session: SessionSchema.default({}),
 })

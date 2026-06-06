@@ -1,6 +1,7 @@
 import { Component, For, createMemo } from "solid-js"
 import { TabItem } from "./TabItem"
-import type { AppEntry, AppStatus, ThemeConfig } from "../types"
+import type { AppEntry, AppStatus } from "../types"
+import type { Palette } from "../lib/palette"
 
 export interface TabListProps {
   entries: AppEntry[]
@@ -11,13 +12,13 @@ export interface TabListProps {
   width: number
   height: number
   scrollOffset: number
-  theme: ThemeConfig
+  theme: Palette
   onSelect: (id: string) => void
   onAddClick: () => void
 }
 
 export const TabList: Component<TabListProps> = (props) => {
-  const visibleHeight = () => props.height - 2 // Reserve space for header and add button
+  const visibleHeight = () => props.height - 2 // header band + add button
 
   const visibleEntries = createMemo(() => {
     const start = props.scrollOffset
@@ -33,11 +34,10 @@ export const TabList: Component<TabListProps> = (props) => {
       flexDirection="column"
       width={props.width}
       height={props.height}
-      borderStyle="single"
-      borderColor={props.isFocused ? props.theme.primary : props.theme.muted}
+      backgroundColor={props.theme.surface}
     >
-      {/* Header */}
-      <box height={1} width={props.width - 2}>
+      {/* Header band — color-separated, no border */}
+      <box height={1} width={props.width} backgroundColor={props.theme.surfaceAlt} paddingLeft={1}>
         <text fg={props.theme.accent}>
           <b>Apps {hasScrollUp() ? "▲" : " "}{hasScrollDown() ? "▼" : " "}</b>
         </text>
@@ -54,7 +54,7 @@ export const TabList: Component<TabListProps> = (props) => {
                 status={props.getStatus(entry.id)}
                 isActive={entry.id === props.activeTabId}
                 isFocused={props.isFocused && actualIndex() === props.selectedIndex}
-                width={props.width - 2}
+                width={props.width - 1}
                 theme={props.theme}
                 onSelect={() => props.onSelect(entry.id)}
               />
@@ -64,8 +64,8 @@ export const TabList: Component<TabListProps> = (props) => {
       </box>
 
       {/* Add button */}
-      <box height={1} width={props.width - 2} onMouseDown={props.onAddClick}>
-        <text fg={props.theme.muted}>[+ Add]</text>
+      <box height={1} width={props.width} paddingLeft={1} onMouseDown={props.onAddClick}>
+        <text fg={props.theme.textDim}>+ Add</text>
       </box>
     </box>
   )

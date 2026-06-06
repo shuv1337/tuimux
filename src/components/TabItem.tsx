@@ -1,6 +1,6 @@
 import { Component } from "solid-js"
 import type { AppEntry, AppStatus } from "../types"
-import type { ThemeConfig } from "../types"
+import type { Palette } from "../lib/palette"
 
 export interface TabItemProps {
   entry: AppEntry
@@ -8,13 +8,11 @@ export interface TabItemProps {
   isActive: boolean
   isFocused: boolean
   width: number
-  theme: ThemeConfig
+  theme: Palette
   onSelect: () => void
 }
 
-/**
- * Get status indicator character
- */
+/** Status indicator glyph. */
 function getStatusIndicator(status: AppStatus): string {
   switch (status) {
     case "running":
@@ -26,58 +24,47 @@ function getStatusIndicator(status: AppStatus): string {
   }
 }
 
-/**
- * Get status color
- */
-function getStatusColor(status: AppStatus, theme: ThemeConfig): string {
+/** Status color, fully theme-driven (no hardcoded greens/reds). */
+function getStatusColor(status: AppStatus, theme: Palette): string {
   switch (status) {
     case "running":
-      return "#9ece6a" // Green
+      return theme.on
     case "stopped":
-      return theme.muted
+      return theme.off
     case "error":
-      return "#f7768e" // Red
+      return theme.error
   }
 }
 
 export const TabItem: Component<TabItemProps> = (props) => {
   const truncatedName = () => {
-    const maxLen = props.width - 4 // Account for status indicator and padding
+    const maxLen = props.width - 4 // rail + dot + space + breathing room
     if (props.entry.name.length > maxLen) {
       return props.entry.name.slice(0, maxLen - 1) + "…"
     }
     return props.entry.name
   }
 
-  const bgColor = () => {
-    if (props.isActive) {
-      return props.theme.primary
-    }
-    if (props.isFocused) {
-      return props.theme.muted
-    }
-    return props.theme.background
-  }
-
-  const fgColor = () => {
-    if (props.isActive) {
-      return props.theme.background
-    }
-    return props.theme.foreground
-  }
+  // Selection reads as: a 1-col bright accent rail + a slightly lighter row bg.
+  const highlighted = () => props.isActive || props.isFocused
+  const rowBg = () => (highlighted() ? props.theme.surfaceAlt : undefined)
+  const nameColor = () => (props.isActive ? props.theme.accent : props.theme.text)
 
   return (
     <box
       height={1}
       width={props.width}
       flexDirection="row"
+      backgroundColor={rowBg()}
       onMouseDown={props.onSelect}
     >
+      {/* Accent rail — the primary "you are here" tell */}
+      <box width={1} height={1} backgroundColor={props.isFocused ? props.theme.accent : undefined} />
       <text fg={getStatusColor(props.status, props.theme)}>
         {getStatusIndicator(props.status)}
       </text>
       <text> </text>
-      <text fg={fgColor()} bg={bgColor()}>
+      <text fg={nameColor()} bg={rowBg()}>
         {props.isActive ? <b>{truncatedName()}</b> : truncatedName()}
       </text>
     </box>

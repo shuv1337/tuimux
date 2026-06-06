@@ -1,12 +1,13 @@
 import { Component, createSignal, createMemo, createEffect, onCleanup } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { ThemeConfig, AppEntryConfig } from "../types"
+import type { AppEntryConfig } from "../types"
+import type { Palette } from "../lib/palette"
 import { APP_PRESETS, type AppPreset } from "../lib/presets"
 import { commandExists } from "../lib/command"
 import { DialogBox } from "./DialogBox"
 
 export interface AddTabModalProps {
-  theme: ThemeConfig
+  theme: Palette
   onAdd: (entry: AppEntryConfig) => void
   onClose: () => void
 }
@@ -179,59 +180,59 @@ export const AddTabModal: Component<AddTabModalProps> = (props) => {
   })
 
   return (
-    <DialogBox
-      theme={props.theme}
-      top="20%"
-      left="20%"
-      width="60%"
-      height={20}
-    >
+    <DialogBox theme={props.theme} width="60%" height={20}>
       {/* Title */}
-      <box height={1}>
+      <box height={1} paddingLeft={2}>
         <text fg={props.theme.accent}>
-          <b> Add New App</b>
+          <b>Add New App</b>
         </text>
       </box>
 
       {/* Mode tabs */}
-      <box height={1} flexDirection="row">
+      <box height={1} flexDirection="row" paddingLeft={2}>
         <text
-          fg={mode() === "preset" ? props.theme.background : props.theme.muted}
-          bg={mode() === "preset" ? props.theme.primary : undefined}
+          fg={mode() === "preset" ? props.theme.accent : props.theme.textDim}
+          bg={mode() === "preset" ? props.theme.surfaceAlt : undefined}
         >
-          {" [Presets] "}
+          {" Presets "}
         </text>
+        <text> </text>
         <text
-          fg={mode() === "custom" ? props.theme.background : props.theme.muted}
-          bg={mode() === "custom" ? props.theme.primary : undefined}
+          fg={mode() === "custom" ? props.theme.accent : props.theme.textDim}
+          bg={mode() === "custom" ? props.theme.surfaceAlt : undefined}
         >
-          {" [Custom] "}
+          {" Custom "}
         </text>
       </box>
 
+      <box height={1} />
+
       {/* Preset list - show when mode is preset */}
       {mode() === "preset" && (
-        <box flexDirection="column" flexGrow={1}>
+        <box flexDirection="column" flexGrow={1} paddingRight={2}>
           {presetsWithAvailability()
             .slice(scrollOffset(), scrollOffset() + VISIBLE_PRESETS)
             .map((preset, index) => {
               const actualIndex = () => scrollOffset() + index
               const isSelected = () => selectedPresetIndex() === actualIndex()
+              const unavailable = () => preset.available === false
+              const dot = () =>
+                preset.available === true ? "●" : preset.available === false ? "·" : "?"
+              const dotColor = () =>
+                preset.available === true
+                  ? props.theme.on
+                  : preset.available === false
+                    ? props.theme.off
+                    : props.theme.warn
               return (
-                <box height={1} flexDirection="row">
-                  <text
-                    fg={
-                      preset.available === false
-                        ? props.theme.muted
-                        : isSelected()
-                          ? props.theme.background
-                          : props.theme.foreground
-                    }
-                    bg={isSelected() ? props.theme.primary : undefined}
-                  >
-                    {preset.available === true ? " [*] " : preset.available === false ? " [ ] " : " [?] "}
+                <box height={1} flexDirection="row" backgroundColor={isSelected() ? props.theme.surfaceAlt : undefined}>
+                  <box width={1} height={1} backgroundColor={isSelected() ? props.theme.accent : undefined} />
+                  <text fg={dotColor()}>{" " + dot() + " "}</text>
+                  <text fg={unavailable() ? props.theme.textDim : (isSelected() ? props.theme.text : props.theme.textDim)}>
                     {preset.name.padEnd(18)}
-                    {preset.command.padEnd(20)}
+                  </text>
+                  <text fg={props.theme.textDim}>
+                    {preset.command.padEnd(18)}
                     {preset.description}
                   </text>
                 </box>
@@ -239,8 +240,8 @@ export const AddTabModal: Component<AddTabModalProps> = (props) => {
             })}
           {/* Scroll indicator */}
           {presetsWithAvailability().length > VISIBLE_PRESETS && (
-            <box height={1}>
-              <text fg={props.theme.muted}>
+            <box height={1} paddingLeft={2}>
+              <text fg={props.theme.textDim}>
                 {scrollOffset() > 0 ? "↑ " : "  "}
                 {selectedPresetIndex() + 1}/{presetsWithAvailability().length}
                 {scrollOffset() + VISIBLE_PRESETS < presetsWithAvailability().length ? " ↓" : ""}
@@ -252,17 +253,17 @@ export const AddTabModal: Component<AddTabModalProps> = (props) => {
 
       {/* Custom form fields - show when mode is custom */}
       {mode() === "custom" && (
-        <box flexDirection="column" flexGrow={1}>
+        <box flexDirection="column" flexGrow={1} paddingLeft={2} paddingRight={2}>
           {fields.map((field) => {
             const isFocused = () => focusedField() === field.key
             return (
               <box height={1} flexDirection="row">
                 <box width={12}>
-                  <text fg={isFocused() ? props.theme.accent : props.theme.muted}>{field.label}:</text>
+                  <text fg={isFocused() ? props.theme.accent : props.theme.textDim}>{field.label}:</text>
                 </box>
                 <text
-                  fg={isFocused() ? props.theme.foreground : props.theme.muted}
-                  bg={isFocused() ? props.theme.primary : undefined}
+                  fg={props.theme.text}
+                  bg={isFocused() ? props.theme.surfaceAlt : undefined}
                 >
                   {" "}{field.value()}{isFocused() ? "█" : " "}
                 </text>
@@ -273,13 +274,33 @@ export const AddTabModal: Component<AddTabModalProps> = (props) => {
       )}
 
       {/* Footer - different hints based on mode */}
-      <box height={1}>
-        <text fg={props.theme.muted}>
-          {mode() === "preset"
-            ? "Enter:Select | Tab:Custom | Esc:Cancel | j/k:Navigate"
-            : "Enter:Add | Tab:Presets | Esc:Cancel | ↑/↓:Field"}
-        </text>
+      <box height={1} flexDirection="row" paddingLeft={2}>
+        {mode() === "preset" ? (
+          <>
+            <Hint theme={props.theme} keyLabel="↵" desc="add" />
+            <Hint theme={props.theme} keyLabel="tab" desc="custom" />
+            <Hint theme={props.theme} keyLabel="j/k" desc="nav" />
+            <Hint theme={props.theme} keyLabel="esc" desc="cancel" />
+          </>
+        ) : (
+          <>
+            <Hint theme={props.theme} keyLabel="↵" desc="add" />
+            <Hint theme={props.theme} keyLabel="tab" desc="presets" />
+            <Hint theme={props.theme} keyLabel="↑↓" desc="field" />
+            <Hint theme={props.theme} keyLabel="esc" desc="cancel" />
+          </>
+        )}
       </box>
     </DialogBox>
   )
 }
+
+const Hint: Component<{ theme: Palette; keyLabel: string; desc: string }> = (props) => (
+  <>
+    <text fg={props.theme.accent}>
+      {"  "}
+      <b>{props.keyLabel}</b>
+    </text>
+    <text fg={props.theme.textDim}>{" " + props.desc}</text>
+  </>
+)

@@ -1,10 +1,10 @@
 import { Component } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { ThemeConfig } from "../types"
+import type { Palette } from "../lib/palette"
 import { DialogBox } from "./DialogBox"
 
 export interface ConfirmDialogProps {
-  theme: ThemeConfig
+  theme: Palette
   title: string
   message: string
   detail?: string
@@ -31,10 +31,10 @@ export const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
   })
 
   return (
-    <DialogBox theme={props.theme} top="35%" left="25%" width="50%" height={9}>
+    <DialogBox theme={props.theme} width="50%" height={9}>
       {/* Title */}
-      <box height={1} paddingLeft={1}>
-        <text fg={props.theme.accent}>
+      <box height={1} paddingLeft={2}>
+        <text fg={props.theme.error}>
           <b>{props.title}</b>
         </text>
       </box>
@@ -42,24 +42,24 @@ export const ConfirmDialog: Component<ConfirmDialogProps> = (props) => {
       <box height={1} />
 
       {/* Message */}
-      <box height={1} paddingLeft={1} paddingRight={1}>
-        <text fg={props.theme.foreground}>{props.message}</text>
+      <box height={1} paddingLeft={2} paddingRight={2}>
+        <text fg={props.theme.text}>{props.message}</text>
       </box>
 
       {/* Optional detail line */}
       {props.detail ? (
-        <box height={1} paddingLeft={1} paddingRight={1}>
-          <text fg={props.theme.muted}>{props.detail}</text>
+        <box height={1} paddingLeft={2} paddingRight={2}>
+          <text fg={props.theme.textDim}>{props.detail}</text>
         </box>
       ) : null}
 
       <box flexGrow={1} />
 
       {/* Footer */}
-      <box height={1} paddingLeft={1}>
-        <text fg={props.theme.muted}>
+      <box height={1} paddingLeft={2}>
+        <text fg={props.theme.textDim}>
           {props.confirmHint ?? "y:Confirm"}
-          {"  |  "}
+          {"   "}
           {props.cancelHint ?? "n/Esc:Cancel"}
         </text>
       </box>

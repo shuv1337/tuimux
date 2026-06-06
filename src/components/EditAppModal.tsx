@@ -1,10 +1,11 @@
 import { Component, createSignal } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { ThemeConfig, AppEntry } from "../types"
+import type { AppEntry } from "../types"
+import type { Palette } from "../lib/palette"
 import { DialogBox } from "./DialogBox"
 
 export interface EditAppModalProps {
-  theme: ThemeConfig
+  theme: Palette
   entry: Pick<AppEntry, "id" | "name" | "command" | "args" | "cwd">
   onSave: (updates: { name: string; command: string; args?: string; cwd: string }) => void
   onDelete: () => void
@@ -90,44 +91,53 @@ export const EditAppModal: Component<EditAppModalProps> = (props) => {
   })
 
   return (
-    <DialogBox
-      theme={props.theme}
-      top="30%"
-      left="25%"
-      width="50%"
-      height={12}
-    >
+    <DialogBox theme={props.theme} width="50%" height={12}>
       {/* Title */}
-      <box height={1}>
+      <box height={1} paddingLeft={2}>
         <text fg={props.theme.accent}>
-          <b> Edit App</b>
+          <b>Edit App</b>
         </text>
       </box>
 
+      <box height={1} />
+
       {/* Fields */}
-      {fields.map((field) => {
-        const isFocused = () => focusedField() === field.key
-        return (
-          <box height={1} flexDirection="row">
-            <box width={12}>
-              <text fg={isFocused() ? props.theme.accent : props.theme.muted}>{field.label}:</text>
+      <box flexDirection="column" flexGrow={1} paddingLeft={2} paddingRight={2}>
+        {fields.map((field) => {
+          const isFocused = () => focusedField() === field.key
+          return (
+            <box height={1} flexDirection="row">
+              <box width={12}>
+                <text fg={isFocused() ? props.theme.accent : props.theme.textDim}>{field.label}:</text>
+              </box>
+              <text
+                fg={props.theme.text}
+                bg={isFocused() ? props.theme.surfaceAlt : undefined}
+              >
+                {" "}{field.value()}{isFocused() ? "█" : " "}
+              </text>
             </box>
-            <text
-              fg={isFocused() ? props.theme.foreground : props.theme.muted}
-              bg={isFocused() ? props.theme.primary : undefined}
-            >
-              {" "}{field.value()}{isFocused() ? "█" : " "}
-            </text>
-          </box>
-        )
-      })}
+          )
+        })}
+      </box>
 
       {/* Footer */}
-      <box height={1}>
-        <text fg={props.theme.muted}>
-          Enter:Save | Ctrl+D:Delete | Esc:Cancel | Tab:Next field
-        </text>
+      <box height={1} flexDirection="row" paddingLeft={2}>
+        <Hint theme={props.theme} keyLabel="↵" desc="save" />
+        <Hint theme={props.theme} keyLabel="^D" desc="delete" />
+        <Hint theme={props.theme} keyLabel="tab" desc="next" />
+        <Hint theme={props.theme} keyLabel="esc" desc="cancel" />
       </box>
     </DialogBox>
   )
 }
+
+const Hint: Component<{ theme: Palette; keyLabel: string; desc: string }> = (props) => (
+  <>
+    <text fg={props.theme.accent}>
+      {"  "}
+      <b>{props.keyLabel}</b>
+    </text>
+    <text fg={props.theme.textDim}>{" " + props.desc}</text>
+  </>
+)

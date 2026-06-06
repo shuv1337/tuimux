@@ -1,10 +1,11 @@
 import { Component, For } from "solid-js"
 import { useKeyboard } from "@opentui/solid"
-import type { LayoutMode, ThemeConfig } from "../types"
+import type { LayoutMode } from "../types"
+import type { Palette } from "../lib/palette"
 import { DialogBox } from "./DialogBox"
 
 export interface HelpModalProps {
-  theme: ThemeConfig
+  theme: Palette
   layoutMode?: LayoutMode
   onClose: () => void
 }
@@ -106,58 +107,68 @@ export const HelpModal: Component<HelpModalProps> = (props) => {
     }
   })
 
-  const primaryGroups = () =>
-    props.layoutMode === "zellij" ? ZELLIJ_GROUPS : TABS_GROUPS
+  const allGroups = () => [
+    ...(props.layoutMode === "zellij" ? ZELLIJ_GROUPS : TABS_GROUPS),
+    ...MODAL_GROUPS,
+  ]
   const modeLabel = () =>
     props.layoutMode === "zellij" ? "Manager" : "Tabs"
 
+  // Split groups across two balanced columns.
+  const leftColumn = () => allGroups().filter((_, i) => i % 2 === 0)
+  const rightColumn = () => allGroups().filter((_, i) => i % 2 === 1)
+
   return (
-    <DialogBox theme={props.theme} top="8%" left="18%" width="64%" height="84%">
+    <DialogBox theme={props.theme} width="80%" height="80%">
       {/* Title */}
-      <box height={1} paddingLeft={1} flexDirection="row">
+      <box height={1} paddingLeft={2} flexDirection="row">
         <text fg={props.theme.accent}>
           <b>Keyboard Shortcuts</b>
         </text>
-        <text fg={props.theme.muted}>{`   (${modeLabel()} mode)`}</text>
+        <text fg={props.theme.textDim}>{`   (${modeLabel()} mode)`}</text>
       </box>
 
       <box height={1} />
 
-      {/* Mode-specific groups */}
-      <For each={primaryGroups()}>
-        {(group) => <ShortcutGroup group={group} theme={props.theme} />}
-      </For>
-
-      {/* Shortcuts that live inside modals */}
-      <For each={MODAL_GROUPS}>
-        {(group) => <ShortcutGroup group={group} theme={props.theme} />}
-      </For>
-
-      <box flexGrow={1} />
+      {/* Two-column shortcut grid */}
+      <box flexDirection="row" flexGrow={1} paddingLeft={2} paddingRight={2}>
+        <box flexDirection="column" flexGrow={1} marginRight={2}>
+          <For each={leftColumn()}>
+            {(group) => <ShortcutGroup group={group} theme={props.theme} />}
+          </For>
+        </box>
+        <box flexDirection="column" flexGrow={1}>
+          <For each={rightColumn()}>
+            {(group) => <ShortcutGroup group={group} theme={props.theme} />}
+          </For>
+        </box>
+      </box>
 
       {/* Footer */}
-      <box height={1} paddingLeft={1}>
-        <text fg={props.theme.muted}>?, q or Esc to close</text>
+      <box height={1} paddingLeft={2}>
+        <text fg={props.theme.textDim}>? · q · Esc to close</text>
       </box>
     </DialogBox>
   )
 }
 
-const ShortcutGroup: Component<{ group: Group; theme: ThemeConfig }> = (props) => {
+const ShortcutGroup: Component<{ group: Group; theme: Palette }> = (props) => {
   return (
     <box flexDirection="column">
-      <box height={1} paddingLeft={1}>
-        <text fg={props.theme.primary}>
+      <box height={1}>
+        <text fg={props.theme.accent}>
           <b>{props.group.title}</b>
         </text>
       </box>
       <For each={props.group.shortcuts}>
         {(shortcut) => (
-          <box height={1} flexDirection="row" paddingLeft={2}>
-            <box width={16}>
-              <text fg={props.theme.accent}>{shortcut.keys}</text>
+          <box height={1} flexDirection="row" paddingLeft={1}>
+            <box width={14}>
+              <text fg={props.theme.accent}>
+                <b>{shortcut.keys}</b>
+              </text>
             </box>
-            <text fg={props.theme.foreground}>{shortcut.label}</text>
+            <text fg={props.theme.text}>{shortcut.label}</text>
           </box>
         )}
       </For>

@@ -9,6 +9,7 @@ function makeConfig(apps: Config["apps"]): Config {
     theme: defaultTheme,
     tab_width: 20,
     layout: "classic",
+    focus_on_launch: true,
     apps,
     session: { persist: true },
   }

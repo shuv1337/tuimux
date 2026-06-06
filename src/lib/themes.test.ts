@@ -28,8 +28,8 @@ describe("isValidHexColor", () => {
 })
 
 describe("THEME_PRESETS", () => {
-  test("contains 8 theme presets", () => {
-    expect(THEME_PRESETS.length).toBe(8)
+  test("contains 9 theme presets", () => {
+    expect(THEME_PRESETS.length).toBe(9)
   })
 
   test("all presets have valid hex colors for all 5 required properties", () => {
@@ -54,13 +54,14 @@ describe("THEME_PRESETS", () => {
     expect(uniqueNames.size).toBe(names.length)
   })
 
-  test("night-owl is the first (default) preset", () => {
-    expect(THEME_PRESETS[0].id).toBe("night-owl")
-    expect(THEME_PRESETS[0].name).toBe("Night Owl")
+  test("graphite is the first (default) preset", () => {
+    expect(THEME_PRESETS[0].id).toBe("graphite")
+    expect(THEME_PRESETS[0].name).toBe("Graphite")
   })
 
   test("includes expected popular themes", () => {
     const expectedThemes = [
+      "graphite",
       "night-owl",
       "dracula",
       "nord",

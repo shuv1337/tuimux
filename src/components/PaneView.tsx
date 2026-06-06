@@ -1,5 +1,6 @@
 import { Component, Show, createEffect } from "solid-js"
-import type { RunningPane, ThemeConfig } from "../types"
+import type { RunningPane } from "../types"
+import type { Palette } from "../lib/palette"
 import { createTerminalFeeder, type TerminalFeedSource } from "../lib/terminal-feed"
 
 export interface PaneViewProps {
@@ -7,7 +8,7 @@ export interface PaneViewProps {
   isActive: boolean
   width: number
   height: number
-  theme: ThemeConfig
+  theme: Palette
 }
 
 export const PaneView: Component<PaneViewProps> = (props) => {
@@ -28,23 +29,23 @@ export const PaneView: Component<PaneViewProps> = (props) => {
       width={props.width}
       height={props.height}
       borderStyle="single"
-      borderColor={props.isActive ? props.theme.primary : props.theme.muted}
+      borderColor={props.isActive ? props.theme.borderFocus : props.theme.border}
     >
       <Show
         when={props.pane}
         fallback={
           <box flexGrow={1} justifyContent="center" alignItems="center">
-            <text fg={props.theme.muted}>Empty pane</text>
+            <text fg={props.theme.textDim}>Empty pane</text>
           </box>
         }
       >
         {(pane) => (
           <box flexDirection="column" flexGrow={1}>
-            <box height={1} flexDirection="row">
+            <box height={1} flexDirection="row" backgroundColor={props.theme.surface}>
               <text fg={props.theme.accent}>
                 <b>{pane().entry.name}</b>
               </text>
-              <text fg={props.theme.muted}>{" "}({pane().status})</text>
+              <text fg={props.theme.textDim}>{" "}({pane().status})</text>
             </box>
             <box width={contentWidth()} height={contentHeight()} overflow="hidden">
               <ghostty-terminal

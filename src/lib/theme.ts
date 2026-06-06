@@ -1,12 +1,13 @@
 import type { ThemeConfig } from "../types"
 
-// Default Night Owl-inspired theme
+// Default Graphite theme: a tight dark surface ramp + sparse cyan accent.
+// See src/lib/palette.ts for how the rich ramp is derived from these 5 tokens.
 export const defaultTheme: ThemeConfig = {
-  primary: "#82aaff",     // Blue - selections, highlights
-  background: "#011627",  // Deep dark blue
-  foreground: "#d6deeb",  // Light gray-blue text
-  accent: "#7fdbca",      // Cyan/teal - active indicators (was purple)
-  muted: "#637777",       // Gray-blue for inactive elements
+  primary: "#7fd1ff",     // Cyan - selections, highlights
+  background: "#111315",  // Near-black graphite
+  foreground: "#f2f4f6",  // Neutral white text
+  accent: "#7fd1ff",      // Cyan - active indicators
+  muted: "#9aa4af",       // Cool gray for inactive elements
 }
 
 /**

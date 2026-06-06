@@ -34,9 +34,14 @@ version: 2                    # Config schema version (required)
 theme: { ... }                # Color theme
 tab_width: 20                 # Tab sidebar width
 layout: "classic"            # classic or zellij layout
+focus_on_launch: true         # Jump focus into a pane when its app launches (default: true)
 apps: [ ... ]                 # Application entries
 session: { ... }              # Session persistence
 ```
+
+When `focus_on_launch` is `true` (the default), launching an app automatically
+switches into TERMINAL mode so you can type immediately. Set it to `false` to stay
+in TABS/MANAGER focus after launching.
 
 Runtime override: `tuidoscope --layout zellij`.
 

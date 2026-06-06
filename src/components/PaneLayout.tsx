@@ -1,6 +1,7 @@
 import { Component } from "solid-js"
 import type { JSX } from "solid-js"
-import type { PaneLayoutNode, RunningPane, ThemeConfig } from "../types"
+import type { PaneLayoutNode, RunningPane } from "../types"
+import type { Palette } from "../lib/palette"
 import { PaneView } from "./PaneView"
 
 export interface PaneLayoutProps {
@@ -9,7 +10,7 @@ export interface PaneLayoutProps {
   activePaneId: string | null
   width: number
   height: number
-  theme: ThemeConfig
+  theme: Palette
 }
 
 function splitSize(total: number): [number, number] {
@@ -70,7 +71,7 @@ export const PaneLayout: Component<PaneLayoutProps> = (props) => {
         renderNode(props.layout, props.width, props.height)
       ) : (
         <box flexGrow={1} justifyContent="center" alignItems="center">
-          <text fg={props.theme.muted}>No panes running</text>
+          <text fg={props.theme.textDim}>No panes running</text>
         </box>
       )}
     </box>
