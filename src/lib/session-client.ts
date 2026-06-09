@@ -167,7 +167,7 @@ async function connectSocket(): Promise<net.Socket> {
 
 async function spawnServerProcess(
   layout?: LayoutMode,
-  options?: { seedDefaultWindow?: boolean }
+  options?: { seedDefaultWindow?: boolean; autostart?: boolean }
 ): Promise<void> {
   // Bun.main is a stable way to find the actual entrypoint even when the CLI is
   // invoked via a symlink (e.g. `tui`) where process.argv[1] may not end in .js.
@@ -183,6 +183,9 @@ async function spawnServerProcess(
   }
   if (options?.seedDefaultWindow === false) {
     args.push("--no-default-window")
+  }
+  if (options?.autostart === false) {
+    args.push("--no-autostart")
   }
 
   const proc = Bun.spawn([process.execPath, ...args], {
@@ -242,7 +245,7 @@ export async function connectSessionClient(options?: { layout?: LayoutMode }): P
 
 export async function reconnectSessionClient(
   layout: LayoutMode,
-  options?: { seedDefaultWindow?: boolean }
+  options?: { seedDefaultWindow?: boolean; autostart?: boolean }
 ): Promise<SessionClient> {
   if (existsSync(SOCKET_PATH)) {
     try {

@@ -1054,6 +1054,9 @@ export const App: Component<AppProps> = (props) => {
   // the UI stays usable (running apps are not replayed here).
   const recoverLayout = async (layout: LayoutMode) => {
     try {
+      // Recovery is a fresh fallback with no replay, so let the new server
+      // autostart configured apps — unlike switchLayout, which suppresses
+      // autostart (autostart: false) and replays the exact running set itself.
       const back = await reconnectSessionClient(layout)
       props.config.layout = layout
       // Persist the layout we actually recovered into, so a cold start doesn't
@@ -1105,6 +1108,10 @@ export const App: Component<AppProps> = (props) => {
       // workspace isn't empty.
       const next = await reconnectSessionClient(target, {
         seedDefaultWindow: entries.length === 0,
+        // The replay below is the single source of truth on a switch, so don't
+        // let the new server also autostart configured apps — that would
+        // duplicate any autostart app being replayed (#14).
+        autostart: false,
       })
       adoptFreshClient(next, target)
 

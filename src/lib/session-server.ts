@@ -110,7 +110,7 @@ function resolveSessionEntry(ref: string | SessionAppRef, entries: AppEntry[]): 
 
 export async function startSessionServer(
   layoutOverride?: LayoutMode,
-  options?: { seedDefaultWindow?: boolean }
+  options?: { seedDefaultWindow?: boolean; autostart?: boolean }
 ): Promise<void> {
   const { config } = await loadConfig()
   if (layoutOverride) {
@@ -518,7 +518,7 @@ export async function startSessionServer(
     const session = await restoreSession()
 
     for (const entry of entries) {
-      if (entry.autostart) {
+      if ((options?.autostart ?? true) && entry.autostart) {
         startApp(entry)
       }
     }
@@ -540,7 +540,7 @@ export async function startSessionServer(
     }
   } else {
     for (const entry of entries) {
-      if (entry.autostart) {
+      if ((options?.autostart ?? true) && entry.autostart) {
         startApp(entry)
       }
     }
@@ -552,7 +552,7 @@ export async function startSessionServer(
 
 async function startPanesSessionServer(
   config: Config,
-  options?: { seedDefaultWindow?: boolean }
+  options?: { seedDefaultWindow?: boolean; autostart?: boolean }
 ): Promise<void> {
   initSessionPath(config)
 
@@ -1205,7 +1205,7 @@ async function startPanesSessionServer(
     }
 
     for (const entry of entries) {
-      if (entry.autostart && !startedEntries.has(entry.id)) {
+      if ((options?.autostart ?? true) && entry.autostart && !startedEntries.has(entry.id)) {
         createWindow(entry, { makeActive: false })
       }
     }
@@ -1220,7 +1220,7 @@ async function startPanesSessionServer(
     }
   } else {
     for (const entry of entries) {
-      if (entry.autostart) {
+      if ((options?.autostart ?? true) && entry.autostart) {
         createWindow(entry, { makeActive: false })
       }
     }
