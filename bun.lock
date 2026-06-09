@@ -5,8 +5,8 @@
     "": {
       "name": "tuidiscope",
       "dependencies": {
-        "@opentui/core": "^0.1.67",
-        "@opentui/solid": "^0.1.67",
+        "@opentui/core": "0.1.67",
+        "@opentui/solid": "0.1.67",
         "fuse.js": "^7.0.0",
         "ghostty-opentui": "1.5.0",
         "solid-js": "1.9.9",

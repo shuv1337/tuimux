@@ -1,6 +1,6 @@
 {
   "name": "tuimux",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A centralized TUI management app for running TUI applications in embedded terminal windows",
   "type": "module",
   "main": "dist/index.js",
@@ -34,8 +34,8 @@
   },
   "homepage": "https://github.com/shuv1337/tuimux#readme",
   "dependencies": {
-    "@opentui/core": "^0.1.67",
-    "@opentui/solid": "^0.1.67",
+    "@opentui/core": "0.1.67",
+    "@opentui/solid": "0.1.67",
     "fuse.js": "^7.0.0",
     "ghostty-opentui": "1.5.0",
     "solid-js": "1.9.9",
