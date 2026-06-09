@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**tuimux** is a centralized TUI (Text User Interface) management application designed to organize and run multiple TUI applications within embedded terminal windows. Built with [OpenTUI](https://github.com/opentui/opentui) and SolidJS, it provides a unified interface for your favorite terminal tools, allowing you to switch between them quickly and manage them as a single workspace.
+**tuimux** is a centralized TUI (Text User Interface) management application designed to organize and run multiple TUI applications within embedded terminal windows. Built with [OpenTUI](https://github.com/anomalyco/opentui) and SolidJS, it provides a unified interface for your favorite terminal tools, allowing you to switch between them quickly and manage them as a single workspace.
 
 By leveraging Ghostty's high-performance terminal emulator, tuimux offers a smooth and responsive experience for running everything from simple shells to complex graphical TUIs like `btop` or `lazygit`.
 
@@ -48,46 +48,74 @@ tuimux
 
 ## First Run
 
-When you launch tuimux for the first time without an existing configuration file, you'll see an empty app list. Getting started is simple:
+When you launch tuimux for the first time without an existing configuration file, a **welcome onboarding wizard** appears. It lets you choose from a multi-select list of app presets (30+ options including shells, system monitors, AI coding agents, file managers, and more). tuimux detects which tools are already installed and highlights them. Press **`Esc`** to skip the wizard and start with an empty workspace.
 
-1. Press **`t`** to open the Add Tab modal
-2. Choose from a list of detected TUI application presets, or switch to Custom mode to add your own
-3. Select an app with **`Enter`** to add it to your workspace
+Once you complete or skip the wizard, tuimux saves your configuration to `~/.config/tuimux/tuimux.yaml` and sets an `onboarding_completed` flag so the wizard won't reappear on subsequent launches. You can re-run the wizard at any time via the command palette (`Space`) → "Run setup wizard".
 
-Tuimux will save your configuration to `~/.config/tuimux/tuimux.yaml` (or your system's equivalent XDG config directory).
+If you have an existing `~/.config/tuidoscope` config and session from the previous name, tuimux automatically migrates it on first run.
+
+### Layout Modes
+
+tuimux supports two layout modes, switchable at any time:
+
+- **tabs** (default): A sidebar shows your app list; one active app is displayed in the embedded terminal at a time. Good for focused, single-app workflows.
+- **panes**: tmux/zellij-style tiled windows and panes. A window-list sidebar; each window holds a split tree of panes, so multiple apps can be visible simultaneously.
+
+Press **`Shift+L`** (or use the command palette → "Switch to tabs/panes layout") to toggle between the two layouts at runtime. tuimux restarts the session server in the target layout and replays your running apps.
 
 ### Keyboard Navigation
 
-Tuimux uses a simple two-mode keyboard system:
+tuimux uses a two-focus keyboard system. The **control focus** (shown as **TABS** in tabs mode or **PANES** in panes mode) lets you navigate and manage apps. The **terminal focus** passes all keystrokes directly to the embedded PTY.
 
-- **Tabs Mode** (default): Single keystrokes control navigation and app management
-  - `j`/`k` - Navigate up/down through the app list
-  - `gg`/`G` - Jump to top/bottom of list
-  - `Enter` - Start or focus the selected app
-  - `t` - Add a new app
-  - `e` - Edit selected app
-  - `x` - Stop selected app
-  - `r` - Restart selected app
-  - `K` (Shift+K) - Kill all running apps
-  - `Space` - Open command palette
-  - `q` - Disconnect (leave apps running)
-  - `Q` (Shift+Q) - Quit and stop all apps
+Press **`Ctrl+A`** to toggle between control and terminal focus. Double-tap `Ctrl+A` to send a literal Ctrl+A to the terminal. **`Ctrl+C` always passes through to the focused app — it never quits tuimux.**
 
-Disconnecting keeps the session server running. Launch `tuimux` again to reattach.
+**Tabs mode — control keys:**
 
-- **Terminal Mode**: All input goes to the focused terminal
-  - `Ctrl+A` - Switch back to Tabs mode
-  - `Ctrl+A Ctrl+A` (double-tap) - Send literal Ctrl+A to the terminal
+| Key | Action |
+|-----|--------|
+| `j` / `k` or `↑` / `↓` | Navigate up/down through the app list |
+| `gg` / `G` | Jump to top / bottom of list |
+| `Enter` | Start or focus the selected app |
+| `t` | Add a new app |
+| `e` | Edit selected app |
+| `x` | Stop selected app |
+| `r` | Restart selected app |
+| `K` (Shift+K) | Kill all running apps |
+| `Space` | Open command palette |
+| `?` | Show help cheatsheet |
+| `Shift+L` | Switch between tabs and panes layout |
+| `Shift+B` | Rotate sidebar position (left → top → right → bottom) |
+| `q` | Detach (leave apps running) |
+| `Q` (Shift+Q) | Quit and stop all apps |
 
-Press **`Ctrl+A`** to toggle between Tabs and Terminal mode.
+**Panes mode — control keys:**
+
+| Key | Action |
+|-----|--------|
+| `v` | Split pane vertically |
+| `s` | Split pane horizontally |
+| `n` | New window |
+| `w` | Close current window |
+| `x` | Close current pane |
+| `[` / `]` | Previous / next window |
+| `p` | Cycle focus between panes |
+| `t` | Add app to pane |
+| `Space` | Open command palette |
+| `?` | Show help cheatsheet |
+| `Shift+L` | Switch between tabs and panes layout |
+| `Shift+B` | Rotate sidebar position |
+| `q` | Detach (leave apps running) |
+| `Q` (Shift+Q) | Quit and stop all apps |
+
+Detaching keeps the session server running. Launch `tuimux` again to reattach.
 
 ## Quick Start Example
 
-If you want to get started immediately with a simple shell, you can skip the onboarding wizard and create a minimal configuration file:
+If you want to get started immediately with a simple shell, you can skip the onboarding wizard and create a minimal configuration file manually:
 
 ```yaml
 # ~/.config/tuimux/tuimux.yaml
-version: 1
+version: 2
 
 apps:
   - name: "Shell"
@@ -101,7 +129,7 @@ This creates a single shell tab using your default shell (bash, zsh, fish, etc.)
 For a more feature-rich setup, you might include common TUI tools:
 
 ```yaml
-version: 1
+version: 2
 
 apps:
   - name: "Shell"

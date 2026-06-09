@@ -1,32 +1,66 @@
 # tuimux
 
-A centralized TUI management application for running multiple TUI applications in embedded terminal windows. Built with [OpenTUI](https://github.com/anomalyco/opentui) and SolidJS.
+A centralized TUI multiplexer for running multiple terminal applications in embedded terminal windows. Pick a **tabs** layout (a task-list sidebar plus one active app) or a tmux/zellij-style **panes** layout (tiled, split-able windows) — and switch between them live. Built with [OpenTUI](https://github.com/anomalyco/opentui) and SolidJS.
 
 ## Screenshots
 
-### Main Interface
-![Shell](shell.png)
+### Tabs mode
 
-### Running TUI Applications
-![btop](btop.png)
+The default layout: a task-list sidebar of your apps on the left, with the active app (here, `btop`) running in a full embedded terminal.
 
-### Command Palette
-![Command Palette](palette.png)
+![Tabs mode](docs/images/tabs-mode.png)
 
-### Edit App Modal
-![Edit App](edit.png)
+### Panes mode
+
+A tmux/zellij-style tiled layout — split windows into multiple panes and watch several apps at once (here, two `htop` panes), with a window-list sidebar for navigation.
+
+![Panes mode](docs/images/panes-mode.png)
+
+### Command palette
+
+Press `Space` to fuzzy-search apps, global commands (switch layout, rotate sidebar, run the setup wizard, pick a theme) and per-app actions.
+
+![Command palette](docs/images/command-palette.png)
+
+### First-run onboarding
+
+On first launch with no apps configured, a welcome wizard lets you multi-select from a list of app presets.
+
+![Onboarding presets](docs/images/onboarding-presets.png)
+
+### Theme picker
+
+Nine built-in themes with live swatches, switchable on the fly.
+
+![Theme picker](docs/images/theme-picker.png)
+
+### Keyboard cheatsheet
+
+Press `?` anytime for the built-in keyboard cheatsheet.
+
+![Help cheatsheet](docs/images/help.png)
+
+### Rotatable task list
+
+The task list can live on any edge — left, right, top, or bottom (`Shift+B`). Here it sits as a horizontal top bar in panes mode.
+
+![Top sidebar](docs/images/sidebar-top.png)
 
 ## Features
 
+- **Two Layout Modes**: A **tabs** layout (task-list sidebar + one active app in an embedded terminal) and a tmux/zellij-style **panes** layout (tiled, split-able windows with multiple apps visible at once). Set `layout: tabs | panes` in config.
+- **Runtime Layout Switching**: Toggle tabs ⇄ panes live with `Shift+L` (or the command palette) — the session restarts in the target layout and replays your running apps.
+- **Rotatable Task List**: Put the sidebar on any edge — left, right, top, or bottom — with `Shift+B`. Left/right give a vertical sidebar; top/bottom give a horizontal bar. Works in both layouts.
 - **Embedded Terminals**: Run multiple TUIs in a single window using Ghostty's high-performance terminal emulator.
-- **Tab Management**: Organize and switch between different applications using a vertical sidebar.
-- **Simple Modal Keyboard**: Two modes - TABS mode for navigation and TERMINAL mode for PTY input. Toggle with `Ctrl+A`.
-- **Command Palette**: Quickly search, switch, stop, edit, and remove apps with a fuzzy-search palette (`Space`).
+- **First-Run Onboarding Wizard**: A welcome screen and multi-select app-preset picker appears on first launch when nothing is configured. Re-run anytime from the command palette.
+- **Command Palette**: Fuzzy-search apps, global commands, and per-app actions (switch/start, stop, edit, remove) with `Space`.
+- **Nine Built-in Themes**: Graphite (default), Night Owl, Dracula, Nord, Solarized Dark, One Dark, Catppuccin Mocha, Gruvbox Dark, and Tokyo Night — switch live, or define your own.
+- **Simple Modal Keyboard**: A control focus for navigation (shown as TABS or PANES) and a TERMINAL focus that passes all keys to the embedded PTY. Toggle with `Ctrl+A`. `Ctrl+C` always passes through to the focused app — it never quits tuimux.
 - **Runtime Management**: Add, edit, and remove application entries directly within the app without restarting.
-- **Session Persistence**: Optional config to remember and restore running applications and the active tab between restarts.
-- **Highly Configurable**: Customize themes and application lists via YAML.
+- **Session Persistence**: Optional config to remember and restore running applications and the active app between restarts.
+- **App Availability Detection**: The Add modal and onboarding wizard show which of 30+ TUI presets (including AI coding agents) are installed on your system.
+- **Highly Configurable**: Customize layout, themes, sidebar position, and application lists via YAML.
 - **Path Expansion**: Supports `~`, `<CONFIG_DIR>`, and `<STATE_DIR>` tokens in paths.
-- **App Availability Detection**: Add Tab modal shows which TUI apps are installed on your system.
 
 ## Documentation
 
@@ -110,39 +144,66 @@ bun run typecheck
 
 ## Configuration
 
-Tuimux looks for a configuration file at `~/.config/tuimux/tuimux.yaml`. It also supports a local `tuimux.yaml` in the current working directory for project-specific setups.
+Tuimux looks for a configuration file at `~/.config/tuimux/tuimux.yaml`. It also supports a local `tuimux.yaml` in the current working directory for project-specific setups. On first run with no config, tuimux auto-migrates an existing `~/.config/tuidoscope` config and session if one is present.
+
+Set the layout with `layout: tabs | panes` (default `tabs`; legacy values `classic` → tabs and `zellij` → panes are still accepted) and the sidebar edge with `sidebar_position: left | right | top | bottom` (default `left`).
 
 ### Keyboard Shortcuts
 
-Tuimux uses a simple two-mode system:
+Focus is split between a **control** focus for navigation (shown as **TABS** in tabs mode, **PANES** in panes mode) and a **TERMINAL** focus that passes every key to the embedded PTY.
 
-- **`Ctrl+A`** - Toggle between TABS and TERMINAL mode
-- **Double-tap `Ctrl+A`** - Send `Ctrl+A` to the terminal (useful for nested tmux/screen)
+- **`Ctrl+A`** - Toggle between control focus and TERMINAL focus
+- **Double-tap `Ctrl+A`** - Send a literal `Ctrl+A` to the terminal (useful for nested tmux/screen)
+- **`Ctrl+C`** - Always passes through to the focused app; it never quits tuimux
 
-**TABS Mode** (single keystrokes):
+**TERMINAL focus**: all keystrokes pass through to the embedded terminal.
+
+**TABS-mode control keys** (single keystrokes):
 
 | Key | Action |
 |-----|--------|
-| `j` / `k` | Navigate down/up in tab list |
-| `gg` | Jump to first tab |
-| `G` | Jump to last tab |
-| `Enter` | Select/start app |
+| `j` / `k` (or `↑` / `↓`) | Navigate down/up in the task list |
+| `gg` | Jump to first app |
+| `G` | Jump to last app |
+| `Enter` | Open / start selected app |
 | `Space` | Open command palette |
-| `t` | Add new tab |
+| `t` | Add new app |
 | `e` | Edit selected app |
 | `x` | Stop selected app |
 | `r` | Restart selected app |
 | `K` | Kill all running apps |
-| `q` | Disconnect (leave apps running) |
-| `Q` | Quit and stop all apps |
+| `q` | Detach (leave apps running) |
+| `Q` | Quit and shut down |
+| `?` | Help cheatsheet |
 | `Shift+L` | Switch layout (tabs/panes) |
 | `Shift+B` | Rotate sidebar position (left → top → right → bottom) |
 
-**TERMINAL Mode**: All keystrokes pass through to the embedded terminal.
+**PANES-mode control keys** (single keystrokes):
+
+| Key | Action |
+|-----|--------|
+| `v` | Split current pane vertically |
+| `s` | Split current pane horizontally |
+| `n` | New window |
+| `w` | Close window |
+| `x` | Close pane |
+| `[` / `]` | Previous / next window |
+| `p` | Cycle pane |
+| `t` | Add new app |
+| `Space` | Open command palette |
+| `q` | Detach (leave apps running) |
+| `Q` | Quit and shut down |
+| `?` | Help cheatsheet |
+| `Shift+L` | Switch layout (tabs/panes) |
+| `Shift+B` | Rotate sidebar position |
+
+See [CONFIG.md](./CONFIG.md) for the full keybinding and configuration reference.
 
 ### Theme Customization
 
-Default theme is Night Owl. Customize in your `tuimux.yaml`:
+The default theme is **Graphite**. Tuimux ships nine built-in themes — Graphite, Night Owl, Dracula, Nord, Solarized Dark, One Dark, Catppuccin Mocha, Gruvbox Dark, and Tokyo Night — which you can switch live from the command palette (`Space` → "Themes…").
+
+A custom theme is a 5-token palette; the rich UI palette is derived from those tokens at runtime. Example (a Night Owl palette) in your `tuimux.yaml`:
 
 ```yaml
 theme:
@@ -154,6 +215,12 @@ theme:
 ```
 
 ## Change Log
+
+### v0.5.0
+- **Rotatable / Horizontal Task List**: The task list can now sit on any edge — left, right, top, or bottom. Cycle positions with `Shift+B` (or the command palette); top/bottom render it as a horizontal bar. Configurable via `sidebar_position`.
+- **First-Run Onboarding Wizard**: A welcome screen and multi-select app-preset picker appears on first launch when no config and no apps exist. Esc skips it, an `onboarding_completed` flag keeps it from reappearing, and it can be re-run anytime from the palette ("Run setup wizard").
+- **Runtime Layout Switching**: Toggle tabs ⇄ panes live with `Shift+L` — the session server restarts in the target layout and replays running apps. Includes correctness fixes so apps and focus survive the switch.
+- **Dependency-Security Docs**: Documented the Bun + Socket GitHub App security posture in [SECURITY.md](./SECURITY.md).
 
 ### v0.4.0
 - **Rebranded to tuimux**: Project renamed from tuidoscope to tuimux.

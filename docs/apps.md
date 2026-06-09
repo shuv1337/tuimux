@@ -8,6 +8,7 @@ Each app in tuimux is defined in the `apps` section of your `tuimux.yaml` config
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
+| `id` | string | *auto* | Stable identifier; auto-generated and written back if omitted |
 | `name` | string | *required* | Display name shown in the tab list |
 | `command` | string | *required* | The executable to run |
 | `args` | string | `""` | Arguments passed to the command |
@@ -717,7 +718,7 @@ apps:
 - Use `--readonly` flag with k9s on production clusters to prevent accidental changes
 - Consider having multiple k9s tabs for different clusters (staging, production)
 - lazydocker is excellent alongside a shell tab for quick container debugging
-- Both tools support custom themes - match them to your tuimux Night Owl theme for consistency
+- Both tools support custom themes - match them to your tuimux theme for consistency
 
 ---
 
