@@ -54,7 +54,7 @@ async function main() {
     // Handle --server
     if (options.server) {
       debugLog("[init] Starting session server")
-      await startSessionServer(options.layout)
+      await startSessionServer(options.layout, { seedDefaultWindow: !options.noDefaultWindow })
       return
     }
     

@@ -108,13 +108,16 @@ function resolveSessionEntry(ref: string | SessionAppRef, entries: AppEntry[]): 
   )
 }
 
-export async function startSessionServer(layoutOverride?: LayoutMode): Promise<void> {
+export async function startSessionServer(
+  layoutOverride?: LayoutMode,
+  options?: { seedDefaultWindow?: boolean }
+): Promise<void> {
   const { config } = await loadConfig()
   if (layoutOverride) {
     config.layout = layoutOverride
   }
   if (config.layout === "panes") {
-    await startPanesSessionServer(config)
+    await startPanesSessionServer(config, options)
     return
   }
   initSessionPath(config)
@@ -547,7 +550,10 @@ export async function startSessionServer(layoutOverride?: LayoutMode): Promise<v
   process.on("SIGINT", () => void shutdown())
 }
 
-async function startPanesSessionServer(config: Config): Promise<void> {
+async function startPanesSessionServer(
+  config: Config,
+  options?: { seedDefaultWindow?: boolean }
+): Promise<void> {
   initSessionPath(config)
 
   const entries = config.apps.map(configToEntry)
@@ -1220,7 +1226,10 @@ async function startPanesSessionServer(config: Config): Promise<void> {
     }
   }
 
-  if (!windows.size) {
+  // Seed a default shell window only when there's nothing else to show. The
+  // client suppresses this (via --no-default-window) when a layout switch is
+  // about to replay apps, so the switch doesn't leave an extra shell (#12).
+  if (!windows.size && (options?.seedDefaultWindow ?? true)) {
     const shellEntry = entries.find((entry) => entry.id === "shell") ?? buildDefaultShellEntry()
     createWindow(shellEntry)
   }

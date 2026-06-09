@@ -1009,9 +1009,11 @@ export const App: Component<AppProps> = (props) => {
   // Capture the running app entries (deduped) plus the active one so they can be
   // re-created after the server restarts in the other layout.
   const captureRunningEntries = (): { entries: AppEntry[]; activeEntryId: string | null } => {
+    let entries: AppEntry[]
+    let activeEntryId: string | null
     if (isPanesLayout()) {
       const seen = new Set<string>()
-      const entries: AppEntry[] = []
+      entries = []
       for (const pane of windowsStore.store.runningPanes.values()) {
         if (seen.has(pane.entry.id)) continue
         seen.add(pane.entry.id)
@@ -1019,12 +1021,20 @@ export const App: Component<AppProps> = (props) => {
       }
       const activePaneId = windowsStore.store.activePaneId
       const activePane = activePaneId ? windowsStore.getRunningPane(activePaneId) : undefined
-      return { entries, activeEntryId: activePane?.entry.id ?? null }
+      activeEntryId = activePane?.entry.id ?? null
+    } else {
+      entries = Array.from(tabsStore.store.runningApps.values()).map((app) => app.entry)
+      activeEntryId = tabsStore.store.activeTabId
     }
-    return {
-      entries: Array.from(tabsStore.store.runningApps.values()).map((app) => app.entry),
-      activeEntryId: tabsStore.store.activeTabId,
-    }
+    // Only replay apps that exist in the configured app list. A running pane
+    // whose entry isn't configured (e.g. the panes server's default "shell"
+    // window) has no home in the tabs sidebar, so replaying it would leave an
+    // unreachable running app (#11). Dropping it keeps every replayed app
+    // addressable; the orphaned process dies with the old server anyway.
+    const configured = entries.filter((entry) => appsStore.getEntry(entry.id) !== undefined)
+    const activeConfigured =
+      activeEntryId && appsStore.getEntry(activeEntryId) ? activeEntryId : (configured[0]?.id ?? null)
+    return { entries: configured, activeEntryId: activeConfigured }
   }
 
   // Point the app at a freshly-connected client, clearing stale layout state so
@@ -1046,6 +1056,9 @@ export const App: Component<AppProps> = (props) => {
     try {
       const back = await reconnectSessionClient(layout)
       props.config.layout = layout
+      // Persist the layout we actually recovered into, so a cold start doesn't
+      // launch in the target layout we failed to reach.
+      await saveConfig(props.config)
       adoptFreshClient(back, layout)
       uiStore.showTemporaryMessage("Switch failed — restored previous layout")
     } catch (error) {
@@ -1086,7 +1099,13 @@ export const App: Component<AppProps> = (props) => {
       props.config.layout = target
       await saveConfig(props.config)
 
-      const next = await reconnectSessionClient(target)
+      // When there are apps to replay, suppress the panes server's default
+      // shell window so the switch doesn't leave an extra unwanted window
+      // alongside them (#12). With nothing to replay, let it seed so the
+      // workspace isn't empty.
+      const next = await reconnectSessionClient(target, {
+        seedDefaultWindow: entries.length === 0,
+      })
       adoptFreshClient(next, target)
 
       // Replay the captured entries once the new server is ready. If it never

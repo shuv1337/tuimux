@@ -165,7 +165,10 @@ async function connectSocket(): Promise<net.Socket> {
   })
 }
 
-async function spawnServerProcess(layout?: LayoutMode): Promise<void> {
+async function spawnServerProcess(
+  layout?: LayoutMode,
+  options?: { seedDefaultWindow?: boolean }
+): Promise<void> {
   // Bun.main is a stable way to find the actual entrypoint even when the CLI is
   // invoked via a symlink (e.g. `tui`) where process.argv[1] may not end in .js.
   const candidates = [
@@ -177,6 +180,9 @@ async function spawnServerProcess(layout?: LayoutMode): Promise<void> {
   const args = entry ? [entry, "--server"] : ["--server"]
   if (layout) {
     args.push("--layout", layout)
+  }
+  if (options?.seedDefaultWindow === false) {
+    args.push("--no-default-window")
   }
 
   const proc = Bun.spawn([process.execPath, ...args], {
@@ -234,7 +240,10 @@ export async function connectSessionClient(options?: { layout?: LayoutMode }): P
   }
 }
 
-export async function reconnectSessionClient(layout: LayoutMode): Promise<SessionClient> {
+export async function reconnectSessionClient(
+  layout: LayoutMode,
+  options?: { seedDefaultWindow?: boolean }
+): Promise<SessionClient> {
   if (existsSync(SOCKET_PATH)) {
     try {
       await unlink(SOCKET_PATH)
@@ -242,7 +251,7 @@ export async function reconnectSessionClient(layout: LayoutMode): Promise<Sessio
       debugLog(`[client] reconnect: failed to remove stale socket: ${unlinkError}`)
     }
   }
-  await spawnServerProcess(layout)
+  await spawnServerProcess(layout, options)
   const socket = await waitForServer()
   return new SessionClient(socket)
 }

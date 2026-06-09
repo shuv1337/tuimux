@@ -9,6 +9,7 @@ export interface CLIOptions {
   debug: boolean
   add: boolean
   server: boolean
+  noDefaultWindow: boolean
   shutdown: boolean
   layout?: "tabs" | "panes"
   unknown: string[]
@@ -60,6 +61,7 @@ export function parseArgs(argv: string[]): CLIOptions {
     debug: false,
     add: false,
     server: false,
+    noDefaultWindow: false,
     shutdown: false,
     layout: undefined,
     unknown: [],
@@ -102,6 +104,9 @@ export function parseArgs(argv: string[]): CLIOptions {
         break
       case "--server":
         options.server = true
+        break
+      case "--no-default-window":
+        options.noDefaultWindow = true
         break
       case "--shutdown":
         options.shutdown = true
