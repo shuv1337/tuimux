@@ -176,11 +176,19 @@ export function spawnPty(
     ...entry.env,
   }
 
-  // Spawn the command directly: Bun.Terminal already provides a real PTY, so the
-  // old `script` wrapper was a redundant second PTY that never forwarded
-  // window-size (TIOCSWINSZ) changes to the inner terminal — which broke live
-  // resize of embedded apps. Opt back into the wrapper with TUIDISCOPE_USE_SCRIPT=1.
+  // Bun.Terminal provides a real PTY, but it does NOT make the spawned process a
+  // session leader with that PTY as its controlling terminal. Apps that read the
+  // PTY slave via stdin (htop, btop, …) work fine, but apps that open /dev/tty
+  // directly (lazydocker/gocui, and other ncurses/tcell apps) fail with
+  // "open /dev/tty: no such device or address". Wrapping with `setsid -c` starts
+  // the child in a new session and sets the PTY as its controlling terminal,
+  // fixing /dev/tty without adding a second PTY layer — so live resize
+  // (TIOCSWINSZ) still reaches the inner app, unlike the old `script` wrapper.
+  // Opt out with TUIDISCOPE_NO_SETSID=1. The legacy `script` wrapper (which broke
+  // resize) remains available behind TUIDISCOPE_USE_SCRIPT=1.
   const useScript = process.platform !== "win32" && !!process.env.TUIDISCOPE_USE_SCRIPT
+  const useSetsid =
+    process.platform === "linux" && !process.env.TUIDISCOPE_NO_SETSID && !useScript
   const entryCommand = buildEntryCommand(entry)
   const commandString = buildCommandString(entryCommand)
   const { program, args } = parseCommand(entryCommand)
@@ -197,6 +205,10 @@ export function spawnPty(
       // Linux: script -q -c "command" /dev/null
       spawnArgs = ["-q", "-c", commandString, "/dev/null"]
     }
+  } else if (useSetsid) {
+    // setsid -c <program> <args...> : new session + controlling tty on the PTY
+    spawnProgram = "setsid"
+    spawnArgs = ["-c", program, ...args]
   } else {
     spawnProgram = program
     spawnArgs = args

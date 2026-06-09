@@ -1,6 +1,6 @@
 {
   "name": "tuimux",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A centralized TUI management app for running TUI applications in embedded terminal windows",
   "type": "module",
   "main": "dist/index.js",
