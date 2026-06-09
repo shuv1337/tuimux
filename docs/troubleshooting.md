@@ -19,10 +19,10 @@ bun install -g tuimux@latest
 ### Current Ctrl+C Behavior
 
 In current versions:
-- **Terminal Mode:** `Ctrl+C` is passed directly to the PTY and interrupts the running process (expected behavior)
-- **Tabs Mode:** `Ctrl+C` is ignored - it does **not** exit the app
+- **Terminal focus (TERMINAL):** `Ctrl+C` is passed directly to the PTY and interrupts the running process (expected behavior)
+- **Control focus (TABS / PANES):** `Ctrl+C` is ignored - it does **not** exit tuimux
 
-Press `q` in Tabs Mode to disconnect and keep apps running, or `Q` to quit and stop them.
+`Ctrl+C` **never** quits tuimux. Press `q` to detach and keep apps running, or `Q` to quit and stop them.
 
 ---
 
@@ -52,7 +52,7 @@ Press `q` in Tabs Mode to disconnect and keep apps running, or `Q` to quit and s
 
 2. **Resize your terminal:** Some rendering issues resolve after resizing the window.
 
-3. **Restart the app:** Press `r` in Tabs Mode to restart the current application.
+3. **Restart the app:** Press `r` in control focus (tabs layout) to restart the current application.
 
 ### TUI apps not displaying correctly
 
@@ -198,17 +198,17 @@ session:
 
 **Symptom:** `Ctrl+A` is captured by tuimux instead of being sent to tmux (which also uses `Ctrl+A` as prefix).
 
-**Solution:** Double-tap `Ctrl+A` in Terminal Mode to send the literal `Ctrl+A` character to the terminal:
-- First `Ctrl+A` → Captured by tuimux (but you're already in terminal mode)
+**Solution:** Double-tap `Ctrl+A` in TERMINAL focus to send the literal `Ctrl+A` character to the terminal:
+- First `Ctrl+A` → Captured by tuimux (but you're already in TERMINAL focus)
 - Second `Ctrl+A` within 500ms → Sends `Ctrl+A` to tmux
 
 ### Keys not working in Terminal Mode
 
 **Symptom:** Navigation keys like `j`/`k` don't work.
 
-**Explanation:** In Terminal Mode, all keys (except `Ctrl+A`) are passed directly to the terminal application. This is by design.
+**Explanation:** In TERMINAL focus, all keys (except `Ctrl+A`) are passed directly to the terminal application. This is by design.
 
-**Solution:** Press `Ctrl+A` to switch to Tabs Mode, where navigation keys work directly.
+**Solution:** Press `Ctrl+A` to switch back to control focus (TABS or PANES), where navigation keys work directly.
 
 ---
 
@@ -216,27 +216,27 @@ session:
 
 ### How do I quit tuimux?
 
-Press `q` in Tabs Mode to disconnect, or `Q` to quit and stop all apps.
+Press `q` in control focus to detach (apps keep running), or `Q` to quit and stop all apps. Both work in tabs and panes layout.
 
 ### How do I stop the background session server?
 
 Run `tuimux --shutdown` to terminate the session server and stop all apps. This also clears the persisted session snapshot so apps will not relaunch unless `autostart: true` or `session.persist: true` is explicitly enabled.
 
-### How do I add a new tab?
+### How do I add a new app?
 
-Press `t` in Tabs Mode to open the Add Tab dialog.
+Press `t` in control focus to open the Add App dialog. This works in both tabs and panes layout.
 
-### How do I switch between Terminal and Tabs mode?
+### How do I switch between Terminal and control focus?
 
-Press `Ctrl+A` to toggle between modes.
+Press `Ctrl+A` to toggle between TERMINAL focus (keys go to the PTY) and control focus (TABS or PANES, for navigation). Double-tap `Ctrl+A` to send a literal Ctrl+A to the terminal.
 
 ### How do I interrupt a running process?
 
-In Terminal Mode, press `Ctrl+C` - it's passed directly to the terminal and sends SIGINT to the running process.
+In TERMINAL focus, press `Ctrl+C` - it's passed directly to the PTY and sends SIGINT to the running process.
 
 ### Can I use tuimux inside tmux?
 
-Yes! Both use `Ctrl+A`, so double-tap `Ctrl+A` in Terminal Mode to send it to the nested tmux session.
+Yes! Both use `Ctrl+A`, so double-tap `Ctrl+A` in TERMINAL focus to send it to the nested tmux session.
 
 ### Where is my config file?
 
@@ -255,7 +255,38 @@ Delete or rename your config file:
 mv ~/.config/tuimux/tuimux.yaml ~/.config/tuimux/tuimux.yaml.bak
 ```
 
-Then restart tuimux - it will start with an empty app list. Press `t` to add apps.
+Then restart tuimux - if no config exists, the first-run onboarding wizard will appear. Press `Esc` to skip it, or follow the prompts to pick app presets. You can re-run it anytime via the command palette → "Run setup wizard".
+
+---
+
+## Session Server Issues
+
+### tuimux won't start / "session already running"
+
+tuimux runs a background session server and connects to it via a Unix socket at `~/.local/state/tuimux/tuimux.sock`. If a previous session crashed and left a stale socket, tuimux may fail to start.
+
+**Solution:** Remove the stale socket and retry:
+```bash
+rm ~/.local/state/tuimux/tuimux.sock
+tuimux
+```
+
+Or use the shutdown command to cleanly stop any running server:
+```bash
+tuimux --shutdown
+```
+
+### Layout switching not working
+
+**Symptom:** Pressing `Shift+L` (or using the command palette → "Switch to tabs/panes layout") does nothing or shows an error.
+
+**Explanation:** Runtime layout switching restarts the session server in the target layout and replays running apps. If the session server is in a bad state, the switch may fail.
+
+**Solution:** Fully restart tuimux:
+```bash
+tuimux --shutdown
+tuimux
+```
 
 ---
 

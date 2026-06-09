@@ -5,6 +5,7 @@ This document provides comprehensive documentation for all tuimux configuration 
 ## Table of Contents
 
 - [Configuration File Location](#configuration-file-location)
+- [Command-Line Options](#command-line-options)
 - [Configuration Schema](#configuration-schema)
 - [Keyboard Shortcuts](#keyboard-shortcuts)
 - [Theme Configuration](#theme-configuration)
@@ -23,21 +24,37 @@ Tuimux searches for configuration in this order:
 2. **XDG Config**: `~/.config/tuimux/tuimux.yaml`
 3. **Defaults**: Built-in defaults if no file found
 
-On first run without a config file, tuimux starts with an empty app list. Press `t` to add apps.
+On first run without a config file and no apps configured, tuimux shows a welcome + multi-select app-preset wizard. Complete or skip it to get started. The wizard can be re-run at any time from the command palette → "Run setup wizard".
+
+---
+
+## Command-Line Options
+
+Run `tuimux --help` to see all options.
+
+| Flag | Description |
+|------|-------------|
+| `-h`, `--help` | Show help and exit |
+| `-v`, `--version` | Show the version and exit |
+| `-d`, `--debug` | Enable debug logging (written to the state dir; equivalent to `TUIMUX_DEBUG=1`) |
+| `-a`, `--add` | Launch straight into the Add-App wizard |
+| `--layout <tabs\|panes>` | Override the layout mode for this launch |
+| `--shutdown` | Shut down the background session server and clear the persisted session |
 
 ---
 
 ## Configuration Schema
 
 ```yaml
-version: 2                    # Config schema version (required)
-theme: { ... }                # Color theme
-tab_width: 20                 # Tab sidebar width
-layout: "tabs"               # tabs or panes layout
-sidebar_position: "left"      # left | right | top | bottom (tab/window list placement; rotate at runtime with Shift+B)
-focus_on_launch: true         # Jump focus into a pane when its app launches (default: true)
-apps: [ ... ]                 # Application entries
-session: { ... }              # Session persistence
+version: 2                      # Config schema version (required)
+theme: { ... }                  # Color theme
+tab_width: 20                   # Tab sidebar width
+layout: "tabs"                  # tabs or panes layout
+sidebar_position: "left"        # left | right | top | bottom (tab/window list placement; rotate at runtime with Shift+B)
+focus_on_launch: true           # Jump focus into a pane when its app launches (default: true)
+onboarding_completed: false     # Set to true once the first-run wizard is completed or skipped; prevents it re-appearing
+apps: [ ... ]                   # Application entries
+session: { ... }                # Session persistence
 ```
 
 When `focus_on_launch` is `true` (the default), launching an app automatically
@@ -90,8 +107,9 @@ The double-tap is useful for:
 | `x` | Stop selected running app |
 | `r` | Restart selected running app |
 | `K` | Kill all running apps (Shift+K) |
-| `q` | Disconnect (leave apps running) |
+| `q` | Detach (leave apps running) |
 | `Q` | Quit and stop all apps |
+| `?` | Show help cheatsheet |
 | `Shift+L` | Switch layout (toggle tabs/panes) |
 | `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
 
@@ -105,7 +123,12 @@ The double-tap is useful for:
 | `Ctrl+R` | Remove selected app and stop any running instances |
 | `Esc` | Close command palette |
 
-The command palette also exposes a **Switch layout** command (search "layout") that toggles between tabs and panes layout.
+The command palette also exposes global commands (fuzzy-searchable):
+
+- **Switch layout** — toggle between tabs and panes layout
+- **Rotate sidebar position** — cycle left → top → right → bottom
+- **Run setup wizard** — re-run the first-run onboarding wizard
+- **Themes…** — browse and apply built-in themes live
 
 ### PANES Mode Shortcuts (layout: panes)
 
@@ -120,6 +143,10 @@ The command palette also exposes a **Switch layout** command (search "layout") t
 | `]` | Next window |
 | `p` | Cycle panes |
 | `Space` | Command palette |
+| `t` | Add app |
+| `q` | Detach (leave apps running) |
+| `Q` | Quit and stop all apps |
+| `?` | Show help cheatsheet |
 | `Shift+L` | Switch layout (toggle panes/tabs) |
 | `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
 | `Ctrl+A` | Switch to TERMINAL mode |
@@ -154,28 +181,54 @@ In **panes** mode a **Windows** sidebar replaces the tab list on the left edge. 
 
 ## Theme Configuration
 
-Tuimux uses a 5-color palette. Default is Night Owl:
+Tuimux uses a 5-color palette. The default built-in theme is **Graphite**:
 
 ```yaml
 theme:
-  primary: "#82aaff"      # Blue - active selections, highlights
-  background: "#011627"   # Deep dark blue - main background
-  foreground: "#d6deeb"   # Light gray-blue - primary text
-  accent: "#7fdbca"       # Cyan/teal - active indicators, checkboxes
-  muted: "#637777"        # Gray-blue - inactive elements, hints
+  primary: "#a0a8b8"      # Silver-blue - active selections, highlights
+  background: "#1c1e24"   # Deep charcoal - main background
+  foreground: "#cdd1db"   # Cool light gray - primary text
+  accent: "#7eb8c9"       # Muted cyan - active indicators, checkboxes
+  muted: "#4a4f5c"        # Dark gray - inactive elements, hints
 ```
 
 ### Color Properties
 
-| Property | Purpose | Night Owl Default |
-|----------|---------|-------------------|
-| `primary` | Active selections, focused items, highlights | `#82aaff` (blue) |
-| `background` | Main UI background | `#011627` (dark blue) |
-| `foreground` | Primary text color | `#d6deeb` (light gray) |
-| `accent` | Active indicators, selected checkboxes, success | `#7fdbca` (cyan) |
-| `muted` | Inactive tabs, secondary text, hints | `#637777` (gray) |
+| Property | Purpose | Graphite Default |
+|----------|---------|------------------|
+| `primary` | Active selections, focused items, highlights | `#a0a8b8` (silver-blue) |
+| `background` | Main UI background | `#1c1e24` (charcoal) |
+| `foreground` | Primary text color | `#cdd1db` (light gray) |
+| `accent` | Active indicators, selected checkboxes, success | `#7eb8c9` (muted cyan) |
+| `muted` | Inactive tabs, secondary text, hints | `#4a4f5c` (dark gray) |
 
-### Alternative Themes
+### Built-in Themes
+
+Tuimux ships with 9 built-in themes selectable live via the command palette → "Themes…":
+
+1. **Graphite** (default)
+2. Night Owl
+3. Dracula
+4. Nord
+5. Solarized Dark
+6. One Dark
+7. Catppuccin Mocha
+8. Gruvbox Dark
+9. Tokyo Night
+
+### Custom Theme
+
+Override any token in `tuimux.yaml` to define a custom theme. The full UI palette is derived at runtime from these 5 values:
+
+**Night Owl:**
+```yaml
+theme:
+  primary: "#82aaff"
+  background: "#011627"
+  foreground: "#d6deeb"
+  accent: "#7fdbca"
+  muted: "#637777"
+```
 
 **Tokyo Night:**
 ```yaml
@@ -392,13 +445,13 @@ session:
 
 version: 2
 
-# Night Owl theme
+# Graphite theme (default — omit this block to use the default)
 theme:
-  primary: "#82aaff"
-  background: "#011627"
-  foreground: "#d6deeb"
-  accent: "#7fdbca"
-  muted: "#637777"
+  primary: "#a0a8b8"
+  background: "#1c1e24"
+  foreground: "#cdd1db"
+  accent: "#7eb8c9"
+  muted: "#4a4f5c"
 
 # Tab sidebar width
 tab_width: 20

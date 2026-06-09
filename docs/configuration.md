@@ -16,17 +16,25 @@ The configuration file follows a structured YAML format. Below is a full example
 ```yaml
 version: 2
 
-# Theme colors (Night Owl defaults)
+# Theme — pick a built-in name or supply a custom 5-token palette.
+# Built-in themes: Graphite (default), Night Owl, Dracula, Nord,
+#   Solarized Dark, One Dark, Catppuccin Mocha, Gruvbox Dark, Tokyo Night
+# To use a built-in, omit the theme block entirely (or set it by name via
+# the command palette → "Themes…"). To override with a custom palette:
 theme:
-  primary: "#82aaff"    # Blue - selections, highlights
-  background: "#011627" # Deep dark blue
-  foreground: "#d6deeb" # Light gray-blue text
-  accent: "#7fdbca"     # Cyan/teal - active indicators
-  muted: "#637777"      # Gray-blue for inactive elements
+  primary: "#6e7681"    # active selections, highlights
+  background: "#0d1117" # main UI background
+  foreground: "#c9d1d9" # primary text
+  accent: "#58a6ff"     # active indicators
+  muted: "#484f58"      # inactive tabs, secondary text
 
 # UI settings
 tab_width: 20
-layout: "tabs" # tabs or panes
+layout: "tabs"           # tabs | panes  (legacy: classic→tabs, zellij→panes)
+sidebar_position: "left" # left | right | top | bottom  (Shift+B to cycle)
+
+# Onboarding — set automatically; re-run wizard via command palette
+onboarding_completed: false
 
 # Session management
 session:
@@ -55,34 +63,78 @@ apps:
 The schema version for the configuration file. Current version is `2`.
 
 ### `theme`
-Tuimux uses a 5-color palette inspired by the **Night Owl** theme.
 
-| Property | Color | Hex | Description |
-|----------|-------|-----|-------------|
-| `primary` | Blue | `#82aaff` | Active selections, highlights |
-| `background` | Deep Dark Blue | `#011627` | Main UI background |
-| `foreground` | Light Gray-Blue | `#d6deeb` | Primary text color |
-| `accent` | Cyan/Teal | `#7fdbca` | Active indicators, checkboxes |
-| `muted` | Gray-Blue | `#637777` | Inactive tabs, secondary text |
+The default theme is **Graphite**. tuimux ships with 9 built-in themes:
 
-#### Full Night Owl Palette
-For reference, these are the base colors used in the default theme:
+| Theme | Description |
+|-------|-------------|
+| **Graphite** (default) | Dark graphite greys with a blue accent |
+| Night Owl | Deep dark blue with cyan/teal accents |
+| Dracula | Dark purple with pink and cyan |
+| Nord | Arctic blue-grey palette |
+| Solarized Dark | Classic Solarized dark palette |
+| One Dark | Atom-inspired dark theme |
+| Catppuccin Mocha | Warm dark pastel palette |
+| Gruvbox Dark | Retro groove warm darks |
+| Tokyo Night | Deep blue Tokyo night palette |
 
-- **Red:** `#ef5350`
-- **Green:** `#22da6e`
-- **Yellow:** `#addb67`
-- **Blue:** `#82aaff`
-- **Magenta:** `#c792ea`
-- **Cyan:** `#7fdbca`
+Switch themes live via the command palette (`Space`) → "Themes…". No restart required.
+
+#### Custom Theme
+
+To define a custom theme, provide a 5-token palette in `tuimux.yaml`. The full UI colour palette is derived from these five tokens at runtime:
+
+| Property | Description |
+|----------|-------------|
+| `primary` | Active selections, highlights |
+| `background` | Main UI background |
+| `foreground` | Primary text colour |
+| `accent` | Active indicators, checkboxes |
+| `muted` | Inactive tabs, secondary text |
+
+Example (Graphite defaults):
+
+```yaml
+theme:
+  primary: "#6e7681"
+  background: "#0d1117"
+  foreground: "#c9d1d9"
+  accent: "#58a6ff"
+  muted: "#484f58"
+```
 
 ### `tab_width`
-(Default: `20`) The width of the tab list in the tabs UI.
+(Default: `20`) The width of the sidebar in the tabs UI.
 
 ### `layout`
-(Default: `tabs`) Selects the UI layout.
-- `tabs`: Sidebar app list + single terminal pane.
-- `panes`: Experimental multiplexer layout with window tabs on the bottom and split panes. Each pane spawns its own terminal.
-Runtime override: `tuimux --layout panes`.
+(Default: `tabs`) Selects the UI layout mode.
+
+| Value | Behaviour |
+|-------|-----------|
+| `tabs` | Sidebar app list + one active app in an embedded terminal. |
+| `panes` | tmux/zellij-style tiled windows and panes; multiple apps visible at once. |
+
+Legacy aliases are still accepted: `classic` maps to `tabs` and `zellij` maps to `panes`.
+
+You can switch layouts **at runtime** with **`Shift+L`** (or command palette → "Switch to tabs/panes layout") — no restart required. tuimux replays your running apps in the new layout.
+
+### `sidebar_position`
+(Default: `left`) Controls where the app/window sidebar is docked. Applies to both tabs and panes modes.
+
+| Value | Result |
+|-------|--------|
+| `left` | Vertical sidebar on the left (default) |
+| `right` | Vertical sidebar on the right |
+| `top` | Horizontal bar at the top |
+| `bottom` | Horizontal bar at the bottom |
+
+Press **`Shift+B`** (or command palette → "Rotate sidebar position") to cycle through positions at runtime.
+
+### `focus_on_launch`
+(Default: `true`) When an app launches, automatically switch into TERMINAL focus so you can start typing into it immediately. Set to `false` to stay in control focus (TABS in tabs mode, PANES in panes mode) after launching.
+
+### `onboarding_completed`
+(Default: `false`) Set automatically to `true` after the first-run wizard is completed or skipped, so the wizard does not reappear on subsequent launches. Re-run the wizard at any time via the command palette → "Run setup wizard".
 
 ### `apps`
 Each app entry defines a TUI application to be managed.
