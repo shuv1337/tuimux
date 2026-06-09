@@ -2,6 +2,7 @@ import { Component, For, createMemo, Show } from "solid-js"
 import { TabItem, getStatusIndicator, getStatusColor } from "./TabItem"
 import type { AppEntry, AppStatus } from "../types"
 import type { Palette } from "../lib/palette"
+import { horizontalWindow } from "../lib/list-window"
 
 export interface TabListProps {
   entries: AppEntry[]
@@ -19,11 +20,11 @@ export interface TabListProps {
 }
 
 const HORIZONTAL_NAME_MAX = 12
+const ADD_W = 3 // trailing " + "
+const IND_W = 2 // each overflow-marker box ("‹ " / " ›" / "  ") — exactly 2 cols
 
 export const TabList: Component<TabListProps> = (props) => {
   // ── HORIZONTAL compact bar (height must be 1) ──────────────────────────────
-  // Memo hoisted to component scope so it's created once (not inside the render
-  // helper) and the orientation branch below can stay reactive.
   const horizontalSegments = createMemo(() =>
     props.entries.map((entry, index) => {
       const status = props.getStatus(entry.id)
@@ -40,6 +41,35 @@ export const TabList: Component<TabListProps> = (props) => {
     })
   )
 
+  // Reactive window: recomputes when entries / width / selection / active tab
+  // change, so navigating or resizing always keeps the active tab on-screen.
+  const horizontalView = createMemo(() => {
+    const segs = horizontalSegments()
+    // Segment column width: leading space + 1-col status dot + name + trailing
+    // space => name.length + 3.
+    const widths = segs.map((seg) => seg.name.length + 3)
+    // Active index to keep visible: when focused, follow the selection; else the
+    // active tab. Clamp / fall back to 0.
+    const rawActive = props.isFocused
+      ? props.selectedIndex
+      : segs.findIndex((s) => s.entry.id === props.activeTabId)
+    const active = Math.max(0, rawActive)
+    const avail0 = props.width - ADD_W
+    const total = widths.reduce((s, w) => s + w, 0)
+    const overflow = total > avail0
+    // In the overflow path at least one side is always hidden, and each marker
+    // box is exactly IND_W cols, so reserving 2*IND_W matches the rendered width.
+    const win = overflow
+      ? horizontalWindow(widths, avail0 - 2 * IND_W, active)
+      : { start: 0, end: segs.length, hiddenBefore: 0, hiddenAfter: 0 }
+    return {
+      overflow,
+      visible: segs.slice(win.start, win.end),
+      showLeft: win.hiddenBefore > 0,
+      showRight: win.hiddenAfter > 0,
+    }
+  })
+
   const renderHorizontal = () => (
     <box
       flexDirection="row"
@@ -48,7 +78,14 @@ export const TabList: Component<TabListProps> = (props) => {
       backgroundColor={props.theme.surface}
       overflow="hidden"
     >
-      <For each={horizontalSegments()}>
+      <Show when={horizontalView().overflow}>
+        <box height={1} backgroundColor={props.theme.surface}>
+          <text fg={props.theme.textDim} bg={props.theme.surface}>
+            {horizontalView().showLeft ? "‹ " : "  "}
+          </text>
+        </box>
+      </Show>
+      <For each={horizontalView().visible}>
         {(seg) => (
           <box
             flexDirection="row"
@@ -68,6 +105,13 @@ export const TabList: Component<TabListProps> = (props) => {
           </box>
         )}
       </For>
+      <Show when={horizontalView().overflow}>
+        <box height={1} backgroundColor={props.theme.surface}>
+          <text fg={props.theme.textDim} bg={props.theme.surface}>
+            {horizontalView().showRight ? " ›" : "  "}
+          </text>
+        </box>
+      </Show>
       {/* Trailing add affordance */}
       <box height={1} onMouseDown={props.onAddClick}>
         <text fg={props.theme.textDim}> + </text>
