@@ -13,7 +13,7 @@ export interface TabItemProps {
 }
 
 /** Status indicator glyph. */
-function getStatusIndicator(status: AppStatus): string {
+export function getStatusIndicator(status: AppStatus): string {
   switch (status) {
     case "running":
       return "●"
@@ -25,7 +25,7 @@ function getStatusIndicator(status: AppStatus): string {
 }
 
 /** Status color, fully theme-driven (no hardcoded greens/reds). */
-function getStatusColor(status: AppStatus, theme: Palette): string {
+export function getStatusColor(status: AppStatus, theme: Palette): string {
   switch (status) {
     case "running":
       return theme.on

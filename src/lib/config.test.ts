@@ -9,7 +9,9 @@ function makeConfig(apps: Config["apps"]): Config {
     theme: defaultTheme,
     tab_width: 20,
     layout: "tabs",
+    sidebar_position: "left",
     focus_on_launch: true,
+    onboarding_completed: false,
     apps,
     session: { persist: true },
   }

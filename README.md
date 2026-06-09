@@ -39,6 +39,10 @@ For detailed guides, see the [`docs/`](./docs/) directory:
 
 See also: [CONFIG.md](./CONFIG.md) for a comprehensive configuration reference.
 
+### Dependency security
+
+tuimux uses Bun as its package manager. Bun installs are not covered by Socket's CLI wrapper (which supports npm/pnpm/yarn/npx only). The [Socket GitHub App](https://github.com/apps/socket-security) handles PR-level dependency scanning instead. See [SECURITY.md](./SECURITY.md) for details.
+
 ## Tech Stack
 
 - **Runtime**: [Bun](https://bun.sh/)
@@ -132,6 +136,7 @@ Tuimux uses a simple two-mode system:
 | `q` | Disconnect (leave apps running) |
 | `Q` | Quit and stop all apps |
 | `Shift+L` | Switch layout (tabs/panes) |
+| `Shift+B` | Rotate sidebar position (left → top → right → bottom) |
 
 **TERMINAL Mode**: All keystrokes pass through to the embedded terminal.
 

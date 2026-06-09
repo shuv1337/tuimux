@@ -28,8 +28,11 @@ export interface Config {
   theme: ThemeConfig
   tab_width: number
   layout: LayoutMode
+  sidebar_position: SidebarPosition
   /** Move keyboard focus into the app's pane automatically when it launches. */
   focus_on_launch: boolean
+  /** Set once the first-run onboarding wizard has been completed or skipped. */
+  onboarding_completed: boolean
   apps: AppEntryConfig[]
   session: SessionConfig
 }
@@ -49,6 +52,8 @@ export interface AppEntry {
 export type AppStatus = "stopped" | "running" | "error"
 
 export type LayoutMode = "tabs" | "panes"
+
+export type SidebarPosition = "left" | "right" | "top" | "bottom"
 
 export type PaneId = string
 export type WindowId = string

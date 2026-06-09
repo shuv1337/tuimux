@@ -97,7 +97,7 @@ async function main() {
     debugLog("[init] extend() completed")
     
     // Load configuration
-    const { config } = await loadConfig()
+    const { config, configFileFound } = await loadConfig()
     if (options.layout) {
       config.layout = options.layout
     }
@@ -113,7 +113,7 @@ async function main() {
       // it passes through to the focused PTY (and is ignored in tabs/panes mode).
       await render(
         () => (
-          <App config={config} sessionClient={sessionClient} startWithAddModal={options.add} />
+          <App config={config} sessionClient={sessionClient} startWithAddModal={options.add} configFileFound={configFileFound} />
         ),
         { exitOnCtrlC: false },
       )

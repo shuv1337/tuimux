@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js"
+import { Component, For, Show } from "solid-js"
 import type { WindowState } from "../types"
 import type { Palette } from "../lib/palette"
 
@@ -12,14 +12,67 @@ export interface WindowListProps {
   theme: Palette
   onSelect: (id: string) => void
   onAddClick: () => void
+  orientation?: "vertical" | "horizontal"
 }
 
-export const WindowList: Component<WindowListProps> = (props) => {
-  const visibleHeight = () => props.height - 2 // header band + footer add row
+const HORIZONTAL_MAX_TITLE = 12
 
+export const WindowList: Component<WindowListProps> = (props) => {
+  const isHorizontal = () => props.orientation === "horizontal"
+
+  // --- HORIZONTAL rendering ---
+  const renderHorizontal = () => {
+    return (
+      <box
+        flexDirection="row"
+        width={props.width}
+        height={1}
+        backgroundColor={props.theme.surface}
+        overflow="hidden"
+      >
+        <For each={props.windows}>
+          {(window, index) => {
+            const isActive = () => window.id === props.activeWindowId
+            const isSelected = () => props.isFocused && index() === (props.selectedIndex ?? -1)
+            const highlighted = () => isActive() || isSelected()
+            const segBg = () => (highlighted() ? props.theme.surfaceAlt : props.theme.surface)
+            const segFg = () => (highlighted() ? props.theme.accent : props.theme.text)
+            const title = () => {
+              const raw = `${index() + 1}:${window.title}`
+              if (raw.length > HORIZONTAL_MAX_TITLE) {
+                return raw.slice(0, HORIZONTAL_MAX_TITLE - 1) + "…"
+              }
+              return raw
+            }
+            const segment = () => ` ${title()} `
+
+            return (
+              <box
+                height={1}
+                backgroundColor={segBg()}
+                onMouseDown={() => props.onSelect(window.id)}
+              >
+                <text fg={segFg()} bg={segBg()}>
+                  {highlighted() ? <b>{segment()}</b> : segment()}
+                </text>
+              </box>
+            )
+          }}
+        </For>
+
+        {/* Trailing add affordance */}
+        <box height={1} backgroundColor={props.theme.surface} onMouseDown={props.onAddClick}>
+          <text fg={props.theme.textDim} bg={props.theme.surface}>{" + "}</text>
+        </box>
+      </box>
+    )
+  }
+
+  // --- VERTICAL rendering (unchanged) ---
+  const visibleHeight = () => props.height - 2 // header band + footer add row
   const visibleWindows = () => props.windows.slice(0, visibleHeight())
 
-  return (
+  const renderVertical = () => (
     <box
       flexDirection="column"
       width={props.width}
@@ -79,5 +132,13 @@ export const WindowList: Component<WindowListProps> = (props) => {
         <text fg={props.theme.textDim}>+ New</text>
       </box>
     </box>
+  )
+
+  // Reactive branch (see TabList): keeps the horizontal/vertical choice live so
+  // a runtime sidebar rotation into top/bottom re-renders the horizontal bar.
+  return (
+    <Show when={isHorizontal()} fallback={renderVertical()}>
+      {renderHorizontal()}
+    </Show>
   )
 }

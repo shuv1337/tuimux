@@ -53,8 +53,11 @@ export const ConfigSchema = z.object({
   theme: ThemeSchema.default({}),
   tab_width: z.number().default(20),
   layout: z.preprocess((v) => (v === "classic" ? "tabs" : v === "zellij" ? "panes" : v), z.enum(["tabs", "panes"]).default("tabs")),
+  sidebar_position: z.enum(["left", "right", "top", "bottom"]).default("left"),
   // Move focus into the app's pane automatically when it launches.
   focus_on_launch: z.boolean().default(true),
+  // Set once the first-run onboarding wizard has been completed or skipped.
+  onboarding_completed: z.boolean().default(false),
   apps: z.array(AppEntrySchema).default([]),
   session: SessionSchema.default({}),
 })

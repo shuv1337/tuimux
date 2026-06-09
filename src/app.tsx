@@ -1,4 +1,5 @@
 import { Component, Show, createSignal, createEffect, onCleanup, createMemo, onMount } from "solid-js"
+import type { JSX } from "solid-js"
 import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid"
 import { TabList } from "./components/TabList"
 import { TerminalPane } from "./components/TerminalPane"
@@ -11,6 +12,7 @@ import { EditAppModal } from "./components/EditAppModal"
 import { ThemePicker } from "./components/ThemePicker"
 import { ConfirmDialog } from "./components/ConfirmDialog"
 import { HelpModal } from "./components/HelpModal"
+import { OnboardingWizard } from "./components/OnboardingWizard"
 
 import { createAppsStore } from "./stores/apps"
 import { createTabsStore } from "./stores/tabs"
@@ -25,12 +27,13 @@ import { widthMode } from "./lib/width-layout"
 import { computePaneRects, collectPaneIds } from "./lib/layout"
 import { type SessionClient, reconnectSessionClient } from "./lib/session-client"
 import type { RunningAppSnapshot, RunningPaneSnapshot, ServerMessage, WindowSnapshot } from "./lib/ipc"
-import type { AppStatus, AppEntry, AppEntryConfig, Config, LayoutMode, ThemeConfig } from "./types"
+import type { AppStatus, AppEntry, AppEntryConfig, Config, LayoutMode, SidebarPosition, ThemeConfig } from "./types"
 
 export interface AppProps {
   config: Config
   sessionClient: SessionClient
   startWithAddModal?: boolean
+  configFileFound?: boolean
 }
 
 export const App: Component<AppProps> = (props) => {
@@ -58,6 +61,11 @@ export const App: Component<AppProps> = (props) => {
   const [pendingDeleteId, setPendingDeleteId] = createSignal<string | null>(null)
   const [lastGTime, setLastGTime] = createSignal(0)
   const [currentTheme, setCurrentTheme] = createSignal<ThemeConfig>(props.config.theme)
+  const [sidebarPosition, setSidebarPosition] = createSignal<SidebarPosition>(props.config.sidebar_position)
+
+  // top/bottom render the sidebar as a horizontal bar; left/right keep it vertical.
+  const sidebarOrientation = (): "vertical" | "horizontal" =>
+    sidebarPosition() === "top" || sidebarPosition() === "bottom" ? "horizontal" : "vertical"
 
   // Derive the rich graphite-style palette from the 5-token theme (memoized).
   const palette = createMemo(() => resolveTheme(currentTheme()))
@@ -76,10 +84,18 @@ export const App: Component<AppProps> = (props) => {
   const tabsSidebarWidth = () =>
     layoutWidthMode() === "minimum" ? 0 : props.config.tab_width
 
+  // Width consumed by a vertical (left/right) sidebar; 0 for a horizontal one.
+  const verticalSidebarWidth = () =>
+    sidebarOrientation() === "vertical" ? tabsSidebarWidth() : 0
+
+  // Height consumed by a horizontal (top/bottom) sidebar bar; 0 for a vertical one.
+  const horizontalSidebarHeight = () =>
+    sidebarOrientation() === "horizontal" && layoutWidthMode() !== "minimum" ? 1 : 0
+
   const getTabsPtyDimensions = () => {
     const dims = terminalDims()
-    const cols = dims.width - tabsSidebarWidth() - 2
-    const rows = dims.height - 4
+    const cols = dims.width - verticalSidebarWidth() - 2
+    const rows = dims.height - 4 - horizontalSidebarHeight()
     return { cols, rows }
   }
 
@@ -267,6 +283,22 @@ export const App: Component<AppProps> = (props) => {
     }
   }
 
+  // Rotate the sidebar through left → top → right → bottom → left and persist.
+  const rotateSidebar = async () => {
+    const order: SidebarPosition[] = ["left", "top", "right", "bottom"]
+    const next = order[(order.indexOf(sidebarPosition()) + 1) % order.length]
+    setSidebarPosition(next)
+
+    // Persist to config (mutate props.config to match existing pattern)
+    props.config.sidebar_position = next
+    try {
+      await saveConfig(props.config)
+      uiStore.showTemporaryMessage(`Sidebar: ${next}`)
+    } catch (error) {
+      uiStore.showTemporaryMessage("Failed to save sidebar position")
+    }
+  }
+
   // Add a new app
   const openEditModal = (id: string) => {
     setEditingEntryId(id)
@@ -277,6 +309,30 @@ export const App: Component<AppProps> = (props) => {
     const entry = appsStore.addEntry(config)
     uiStore.closeModal()
     uiStore.showTemporaryMessage(`Added: ${entry.name}`)
+    void persistAppsConfig()
+  }
+
+  // Onboarding wizard: add each chosen preset (skipping any already configured,
+  // since the wizard can be re-run from the palette), then mark onboarding done
+  // and persist so it doesn't reappear next launch.
+  const handleOnboardingComplete = (entries: AppEntryConfig[]) => {
+    const existing = new Set(appsStore.store.entries.map((entry) => entry.command))
+    const added = entries.filter((entry) => !existing.has(entry.command))
+    for (const entry of added) {
+      appsStore.addEntry(entry)
+    }
+    props.config.onboarding_completed = true
+    uiStore.closeModal()
+    void persistAppsConfig()
+    if (added.length > 0) {
+      uiStore.showTemporaryMessage(`Added ${added.length} app${added.length === 1 ? "" : "s"}`)
+    }
+  }
+
+  const handleOnboardingSkip = () => {
+    // Persist the completed marker so the wizard doesn't reappear every launch.
+    props.config.onboarding_completed = true
+    uiStore.closeModal()
     void persistAppsConfig()
   }
 
@@ -541,6 +597,13 @@ export const App: Component<AppProps> = (props) => {
         return
       }
 
+      // Shift+B: rotate sidebar position
+      if (matchesKeybind(event, "shift+b") || (event.shift && event.name === "b")) {
+        void rotateSidebar()
+        event.preventDefault()
+        return
+      }
+
       switch (event.name) {
         case "v":
           splitActivePane("vertical")
@@ -741,10 +804,26 @@ export const App: Component<AppProps> = (props) => {
       event.preventDefault()
       return
     }
+
+    // Shift+B: rotate sidebar position
+    if (matchesKeybind(event, "shift+b") || (event.shift && event.name === "b")) {
+      void rotateSidebar()
+      event.preventDefault()
+      return
+    }
   })
 
-  // Handle --add flag: open add modal on startup
+  // First run (no config file and no configured apps) opens the onboarding
+  // wizard, which takes precedence over the --add modal. Otherwise honor --add.
   onMount(() => {
+    const isFirstRun =
+      !props.configFileFound &&
+      props.config.apps.length === 0 &&
+      !props.config.onboarding_completed
+    if (isFirstRun && !uiStore.store.activeModal) {
+      uiStore.openModal("onboarding")
+      return
+    }
     if (props.startWithAddModal) {
       uiStore.openModal("add-tab")
     }
@@ -958,9 +1037,9 @@ export const App: Component<AppProps> = (props) => {
       }
 
       const dims = terminalDims()
-      const sidebarWidth = layoutWidthMode() !== "minimum" ? props.config.tab_width : 0
-      const contentWidth = dims.width - sidebarWidth
-      const contentHeight = dims.height - 1
+      // Vertical sidebars eat width; horizontal ones eat a row. Status bar is the -1.
+      const contentWidth = dims.width - verticalSidebarWidth()
+      const contentHeight = dims.height - 1 - horizontalSidebarHeight()
       if (contentWidth < 10 || contentHeight < 3) {
         return
       }
@@ -1164,61 +1243,97 @@ export const App: Component<AppProps> = (props) => {
     return entry
   })
 
+  // Arrange a sidebar + content according to the current sidebar position.
+  // left/right → a row (sidebar is vertical); top/bottom → a column (sidebar is
+  // a horizontal bar). Order swaps so the sidebar lands on the requested edge.
+  const SidebarLayout: Component<{ sidebar: JSX.Element; content: JSX.Element }> = (
+    layoutProps
+  ) => {
+    const sidebarFirst = () => sidebarPosition() === "left" || sidebarPosition() === "top"
+    return (
+      <box
+        flexDirection={sidebarOrientation() === "horizontal" ? "column" : "row"}
+        flexGrow={1}
+      >
+        <Show when={sidebarFirst()}>{layoutProps.sidebar}</Show>
+        {layoutProps.content}
+        <Show when={!sidebarFirst()}>{layoutProps.sidebar}</Show>
+      </box>
+    )
+  }
+
   return (
     <box flexDirection="column" width="100%" height="100%">
       <Show
         when={isPanesLayout()}
         fallback={
-          <box flexDirection="row" flexGrow={1}>
-            <Show when={layoutWidthMode() !== "minimum"}>
-              <TabList
-                entries={appsStore.store.entries}
-                activeTabId={tabsStore.store.activeTabId}
-                selectedIndex={selectedIndex()}
-                getStatus={getAppStatus}
-                isFocused={tabsStore.store.focusMode === "tabs"}
-                width={props.config.tab_width}
-                height={terminalDims().height - 1}
-                scrollOffset={tabsStore.store.scrollOffset}
+          <SidebarLayout
+            sidebar={
+              <Show when={layoutWidthMode() !== "minimum"}>
+                <TabList
+                  entries={appsStore.store.entries}
+                  activeTabId={tabsStore.store.activeTabId}
+                  selectedIndex={selectedIndex()}
+                  getStatus={getAppStatus}
+                  isFocused={tabsStore.store.focusMode === "tabs"}
+                  orientation={sidebarOrientation()}
+                  width={
+                    sidebarOrientation() === "horizontal"
+                      ? terminalDims().width
+                      : props.config.tab_width
+                  }
+                  height={sidebarOrientation() === "horizontal" ? 1 : terminalDims().height - 1}
+                  scrollOffset={tabsStore.store.scrollOffset}
+                  theme={palette()}
+                  onSelect={handleSelectApp}
+                  onAddClick={() => uiStore.openModal("add-tab")}
+                />
+              </Show>
+            }
+            content={
+              <TerminalPane
+                runningApp={activeRunningApp()}
+                isFocused={tabsStore.store.focusMode === "terminal"}
+                width={terminalDims().width - verticalSidebarWidth()}
+                height={terminalDims().height - 1 - horizontalSidebarHeight()}
                 theme={palette()}
-                onSelect={handleSelectApp}
-                onAddClick={() => uiStore.openModal("add-tab")}
+                onInput={handleTerminalInput}
               />
-            </Show>
-
-            <TerminalPane
-              runningApp={activeRunningApp()}
-              isFocused={tabsStore.store.focusMode === "terminal"}
-              width={terminalDims().width - tabsSidebarWidth()}
-              height={terminalDims().height - 1}
-              theme={palette()}
-              onInput={handleTerminalInput}
-            />
-          </box>
+            }
+          />
         }
       >
-        <box flexDirection="row" flexGrow={1}>
-          <Show when={layoutWidthMode() !== "minimum"}>
-            <WindowList
-              windows={windowsStore.store.windows}
-              activeWindowId={windowsStore.store.activeWindowId}
-              isFocused={windowsStore.store.focusMode === "tabs"}
-              width={props.config.tab_width}
-              height={terminalDims().height - 1}
+        <SidebarLayout
+          sidebar={
+            <Show when={layoutWidthMode() !== "minimum"}>
+              <WindowList
+                windows={windowsStore.store.windows}
+                activeWindowId={windowsStore.store.activeWindowId}
+                isFocused={windowsStore.store.focusMode === "tabs"}
+                orientation={sidebarOrientation()}
+                width={
+                  sidebarOrientation() === "horizontal"
+                    ? terminalDims().width
+                    : props.config.tab_width
+                }
+                height={sidebarOrientation() === "horizontal" ? 1 : terminalDims().height - 1}
+                theme={palette()}
+                onSelect={activateWindow}
+                onAddClick={createWindowFromActive}
+              />
+            </Show>
+          }
+          content={
+            <PaneLayout
+              layout={activeWindow()?.layout ?? null}
+              panes={windowsStore.store.runningPanes}
+              activePaneId={windowsStore.store.activePaneId}
+              width={terminalDims().width - verticalSidebarWidth()}
+              height={terminalDims().height - 1 - horizontalSidebarHeight()}
               theme={palette()}
-              onSelect={activateWindow}
-              onAddClick={createWindowFromActive}
             />
-          </Show>
-          <PaneLayout
-            layout={activeWindow()?.layout ?? null}
-            panes={windowsStore.store.runningPanes}
-            activePaneId={windowsStore.store.activePaneId}
-            width={terminalDims().width - (layoutWidthMode() !== "minimum" ? props.config.tab_width : 0)}
-            height={terminalDims().height - 1}
-            theme={palette()}
-          />
-        </box>
+          }
+        />
       </Show>
 
       {/* Status bar */}
@@ -1293,6 +1408,15 @@ export const App: Component<AppProps> = (props) => {
               void switchLayout(layoutMode() === "tabs" ? "panes" : "tabs")
               return
             }
+            if (action.type === "rotate_sidebar") {
+              uiStore.closeModal()
+              void rotateSidebar()
+              return
+            }
+            if (action.type === "open_onboarding") {
+              uiStore.openModal("onboarding")
+              return
+            }
           }}
           onClose={() => uiStore.closeModal()}
         />
@@ -1303,6 +1427,14 @@ export const App: Component<AppProps> = (props) => {
           theme={palette()}
           onAdd={handleAddApp}
           onClose={() => uiStore.closeModal()}
+        />
+      </Show>
+
+      <Show when={uiStore.store.activeModal === "onboarding"}>
+        <OnboardingWizard
+          theme={palette()}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
         />
       </Show>
 

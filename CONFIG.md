@@ -34,6 +34,7 @@ version: 2                    # Config schema version (required)
 theme: { ... }                # Color theme
 tab_width: 20                 # Tab sidebar width
 layout: "tabs"               # tabs or panes layout
+sidebar_position: "left"      # left | right | top | bottom (tab/window list placement; rotate at runtime with Shift+B)
 focus_on_launch: true         # Jump focus into a pane when its app launches (default: true)
 apps: [ ... ]                 # Application entries
 session: { ... }              # Session persistence
@@ -92,6 +93,7 @@ The double-tap is useful for:
 | `q` | Disconnect (leave apps running) |
 | `Q` | Quit and stop all apps |
 | `Shift+L` | Switch layout (toggle tabs/panes) |
+| `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
 
 ### Command Palette Shortcuts
 
@@ -119,6 +121,7 @@ The command palette also exposes a **Switch layout** command (search "layout") t
 | `p` | Cycle panes |
 | `Space` | Command palette |
 | `Shift+L` | Switch layout (toggle panes/tabs) |
+| `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
 | `Ctrl+A` | Switch to TERMINAL mode |
 
 ### TERMINAL Mode Shortcuts

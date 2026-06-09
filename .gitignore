@@ -30,3 +30,6 @@ Thumbs.db
 
 # Ralph
 .ralph/
+
+# Dogfood QA evidence (screenshots/ANSI captures)
+dogfood-tui-output/

@@ -8,7 +8,11 @@ import { getVisibleWindowOffset } from "../lib/list-window"
 import { DialogBox } from "./DialogBox"
 
 export type CommandAction = "switch" | "start" | "stop" | "restart" | "edit" | "remove"
-export type GlobalAction = { type: "open_theme_picker" } | { type: "switch_layout" }
+export type GlobalAction =
+  | { type: "open_theme_picker" }
+  | { type: "switch_layout" }
+  | { type: "rotate_sidebar" }
+  | { type: "open_onboarding" }
 
 export interface CommandPaletteProps {
   entries: AppEntry[]
@@ -69,6 +73,20 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
       description: "Toggle between tabs and panes layout",
       keywords: ["layout", "switch", "tabs", "panes", "mode", "zellij", "classic"],
       action: { type: "switch_layout" },
+    },
+    {
+      id: "rotate-sidebar",
+      name: "Rotate sidebar position",
+      description: "Cycle sidebar: left → top → right → bottom",
+      keywords: ["sidebar", "rotate", "position", "left", "right", "top", "bottom", "move"],
+      action: { type: "rotate_sidebar" },
+    },
+    {
+      id: "run-setup-wizard",
+      name: "Run setup wizard",
+      description: "Re-run the onboarding app picker",
+      keywords: ["onboarding", "wizard", "setup", "welcome", "presets", "getting started"],
+      action: { type: "open_onboarding" },
     },
   ])
 
