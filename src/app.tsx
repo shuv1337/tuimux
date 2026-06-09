@@ -26,6 +26,7 @@ import { resolveTheme } from "./lib/palette"
 import { widthMode } from "./lib/width-layout"
 import { computePaneRects, collectPaneIds } from "./lib/layout"
 import { type SessionClient, reconnectSessionClient } from "./lib/session-client"
+import { APP_VERSION } from "./lib/version"
 import type { RunningAppSnapshot, RunningPaneSnapshot, ServerMessage, WindowSnapshot } from "./lib/ipc"
 import type { AppStatus, AppEntry, AppEntryConfig, Config, LayoutMode, SidebarPosition, ThemeConfig } from "./types"
 
@@ -57,6 +58,12 @@ export const App: Component<AppProps> = (props) => {
   const [isSwitching, setIsSwitching] = createSignal(false)
 
   const [isDisconnecting, setIsDisconnecting] = createSignal(false)
+  // Set when a snapshot arrives from a server whose build predates this binary.
+  // Holds the (stale) server version so the prompt can show what's running.
+  const [outdatedServerVersion, setOutdatedServerVersion] = createSignal<string | null>(null)
+  // Remember a version the user declined to restart, so we don't nag on every
+  // subsequent snapshot from that same stale server.
+  let dismissedServerVersion: string | null = null
   const [editingEntryId, setEditingEntryId] = createSignal<string | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = createSignal<string | null>(null)
   const [lastGTime, setLastGTime] = createSignal(0)
@@ -513,6 +520,11 @@ export const App: Component<AppProps> = (props) => {
         if (uiStore.store.activeModal === "confirm-delete") {
           setPendingDeleteId(null)
         }
+        if (uiStore.store.activeModal === "server-update") {
+          dismissServerUpdate()
+          event.preventDefault()
+          return
+        }
         uiStore.closeModal()
         event.preventDefault()
       }
@@ -835,6 +847,8 @@ export const App: Component<AppProps> = (props) => {
         return
       }
 
+      maybePromptServerUpdate(message.serverVersion)
+
       if (message.layout === "panes") {
         setLayoutMode("panes")
         warnedLayoutMismatch = props.config.layout !== "panes"
@@ -1151,35 +1165,31 @@ export const App: Component<AppProps> = (props) => {
     }
   }
 
-  // Switch between tabs and panes layout at runtime by restarting the server.
-  // The old server is shut down (clearing its session), a fresh server is spawned
-  // in the target layout, and the previously running entries are re-created once
-  // the new server reports its first snapshot. A timeout / early disconnect on the
-  // new connection aborts cleanly into the previous layout, so the UI can never
-  // freeze with isSwitching() stuck on (which would also wedge the disconnect
-  // guard in handleDisconnectEvent).
-  const switchLayout = async (target: LayoutMode) => {
-    if (isSwitching() || isDisconnecting()) {
-      return
-    }
-    if (target === layoutMode()) {
-      uiStore.showTemporaryMessage(`Already in ${target}`)
-      return
-    }
-
-    const previousLayout = layoutMode()
+  // Shut down the running server (clearing its session), spawn a fresh one in
+  // `target`, and replay the previously running entries once it reports its
+  // first snapshot. A timeout / early disconnect on the new connection aborts
+  // cleanly into `previousLayout`, so the UI can never freeze with isSwitching()
+  // stuck on (which would also wedge the disconnect guard in
+  // handleDisconnectEvent). Shared by layout switching and version-restart.
+  const reconnectServer = async (
+    target: LayoutMode,
+    previousLayout: LayoutMode,
+    messages: { pending: string; done: string; logTag: string }
+  ) => {
     setIsSwitching(true)
     if (uiStore.store.activeModal) {
       uiStore.closeModal()
     }
-    uiStore.setStatusMessage(`Switching to ${target}…`)
+    uiStore.setStatusMessage(messages.pending)
 
     const { entries, activeEntryId } = captureRunningEntries()
 
     try {
       await client().shutdownAndWait(1500, { clearSession: true })
-      props.config.layout = target
-      await saveConfig(props.config)
+      if (target !== previousLayout) {
+        props.config.layout = target
+        await saveConfig(props.config)
+      }
 
       // When there are apps to replay, suppress the panes server's default
       // shell window so the switch doesn't leave an extra unwanted window
@@ -1187,9 +1197,9 @@ export const App: Component<AppProps> = (props) => {
       // workspace isn't empty.
       const next = await reconnectSessionClient(target, {
         seedDefaultWindow: entries.length === 0,
-        // The replay below is the single source of truth on a switch, so don't
-        // let the new server also autostart configured apps — that would
-        // duplicate any autostart app being replayed (#14).
+        // The replay below is the single source of truth here, so don't let the
+        // new server also autostart configured apps — that would duplicate any
+        // autostart app being replayed (#14).
         autostart: false,
       })
       adoptFreshClient(next, target)
@@ -1219,7 +1229,7 @@ export const App: Component<AppProps> = (props) => {
           next.setActiveTab(activeEntryId)
         }
         setIsSwitching(false)
-        uiStore.showTemporaryMessage(`Switched to ${target}`)
+        uiStore.showTemporaryMessage(messages.done)
       }
       const onReady = () => finish(true)
       const onLost = () => finish(false)
@@ -1227,8 +1237,66 @@ export const App: Component<AppProps> = (props) => {
       next.once("snapshot", onReady)
       next.once("disconnect", onLost)
     } catch (error) {
-      debugLog(`[switch] ${error}`)
+      debugLog(`[${messages.logTag}] ${error}`)
       await recoverLayout(previousLayout)
+    }
+  }
+
+  // Switch between tabs and panes layout at runtime by restarting the server.
+  const switchLayout = async (target: LayoutMode) => {
+    if (isSwitching() || isDisconnecting()) {
+      return
+    }
+    if (target === layoutMode()) {
+      uiStore.showTemporaryMessage(`Already in ${target}`)
+      return
+    }
+    await reconnectServer(target, layoutMode(), {
+      pending: `Switching to ${target}…`,
+      done: `Switched to ${target}`,
+      logTag: "switch",
+    })
+  }
+
+  // Restart the session server in place (same layout), replaying running apps.
+  // Used after a new binary is installed so the long-lived server picks up the
+  // new code without losing the user's running apps.
+  const restartServer = async () => {
+    if (isSwitching() || isDisconnecting()) {
+      return
+    }
+    const layout = layoutMode()
+    setOutdatedServerVersion(null)
+    dismissedServerVersion = null
+    await reconnectServer(layout, layout, {
+      pending: "Restarting on the new version…",
+      done: `Restarted on tuimux ${APP_VERSION}`,
+      logTag: "version-restart",
+    })
+  }
+
+  // Compare the server's reported build against ours. When the server is older
+  // (a new binary was installed while it kept running), offer to restart it —
+  // once per stale version, and never on top of another modal or mid-switch.
+  const maybePromptServerUpdate = (serverVersion: string | undefined) => {
+    if (!serverVersion || serverVersion === APP_VERSION) {
+      return
+    }
+    if (serverVersion === dismissedServerVersion) {
+      return
+    }
+    if (isSwitching() || isDisconnecting() || uiStore.store.activeModal) {
+      return
+    }
+    setOutdatedServerVersion(serverVersion)
+    uiStore.openModal("server-update")
+  }
+
+  const dismissServerUpdate = () => {
+    dismissedServerVersion = outdatedServerVersion()
+    setOutdatedServerVersion(null)
+    if (uiStore.store.activeModal === "server-update") {
+      uiStore.closeModal()
     }
   }
 
@@ -1465,6 +1533,21 @@ export const App: Component<AppProps> = (props) => {
           cancelHint="n/Esc:Cancel"
           onConfirm={confirmDelete}
           onCancel={cancelDelete}
+        />
+      </Show>
+
+      <Show when={uiStore.store.activeModal === "server-update" && outdatedServerVersion()}>
+        <ConfirmDialog
+          theme={palette()}
+          title="New version installed"
+          message={`A newer tuimux is installed (v${APP_VERSION}), but the background session is still running v${outdatedServerVersion()}.`}
+          detail="Restart it now to pick up the update? Your running apps will be reopened."
+          confirmHint="y:Restart"
+          cancelHint="n/Esc:Keep current"
+          onConfirm={() => {
+            void restartServer()
+          }}
+          onCancel={dismissServerUpdate}
         />
       </Show>
 

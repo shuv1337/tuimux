@@ -21,6 +21,7 @@ import type {
   WindowState,
 } from "../types"
 import { generateId } from "./id"
+import { APP_VERSION } from "./version"
 import { buildSplitNode, collectPaneIds, removePaneLeaf, replacePaneLeaf } from "./layout"
 import { handleTabsRunExit } from "./session-lifecycle"
 
@@ -459,6 +460,7 @@ export async function startSessionServer(
       serializeMessage({
         type: "snapshot",
         layout: "tabs",
+        serverVersion: APP_VERSION,
         runningApps: snapshot,
         activeTabId,
       })
@@ -1085,6 +1087,7 @@ async function startPanesSessionServer(
       serializeMessage({
         type: "snapshot",
         layout: "panes",
+        serverVersion: APP_VERSION,
         windows: snapshotWindows,
         panes: snapshotPanes,
         activeWindowId,

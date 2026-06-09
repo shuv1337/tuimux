@@ -62,6 +62,9 @@ export type ServerMessage =
   | {
       type: "snapshot"
       layout: LayoutMode
+      // The version of the server build. The client compares this against its
+      // own to detect "new binary installed, old server still running".
+      serverVersion?: string
       runningApps?: RunningAppSnapshot[]
       activeTabId?: string | null
       windows?: WindowSnapshot[]
