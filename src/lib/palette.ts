@@ -14,8 +14,8 @@ import type { ThemeConfig } from "../types"
 export interface Palette extends ThemeConfig {
   // surface ramp (keep the steps TIGHT — this is what reads as calm)
   bg: string // app background
-  surface: string // panels, headers (1 shade up)
-  surfaceAlt: string // chrome bars, selected row, modals (1 shade up again)
+  surface: string // filled panels and modal inputs (1 shade up)
+  surfaceAlt: string // selected/highlighted rows, status bars, modals (1 shade up again)
   // structure
   border: string // dim resting borders / separators
   borderFocus: string // focused pane / modal border (bright)

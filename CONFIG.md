@@ -177,6 +177,8 @@ Tuimux supports two layout modes, selectable at runtime with `Shift+L` or in con
 
 In **panes** mode a **Windows** sidebar replaces the tab list on the left edge. Each entry in the sidebar shows the window index and title; the active/selected window is highlighted. A `+ New` footer row opens the add-window flow. All pane management keys (`v`, `s`, `x`, `p`, etc.) are available while in PANES focus.
 
+Sidebar chrome is transparent in both layouts and every sidebar position: unselected rows, horizontal bars, and header labels inherit the terminal background. Only active, focused, or selected rows paint a derived highlight so they remain legible.
+
 ---
 
 ## Theme Configuration

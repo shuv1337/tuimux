@@ -106,6 +106,8 @@ theme:
 ### `tab_width`
 (Default: `20`) The width of the sidebar in the tabs UI.
 
+The tab/window sidebar chrome is transparent by design: unselected rows, horizontal bars, and header labels inherit the terminal background instead of filling with the theme background. Only active, focused, or selected rows paint a derived highlight so they remain legible.
+
 ### `layout`
 (Default: `tabs`) Selects the UI layout mode.
 

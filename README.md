@@ -50,7 +50,7 @@ The task list can live on any edge — left, right, top, or bottom (`Shift+B`). 
 
 - **Two Layout Modes**: A **tabs** layout (task-list sidebar + one active app in an embedded terminal) and a tmux/zellij-style **panes** layout (tiled, split-able windows with multiple apps visible at once). Set `layout: tabs | panes` in config.
 - **Runtime Layout Switching**: Toggle tabs ⇄ panes live with `Shift+L` (or the command palette) — the session restarts in the target layout and replays your running apps.
-- **Rotatable Task List**: Put the sidebar on any edge — left, right, top, or bottom — with `Shift+B`. Left/right give a vertical sidebar; top/bottom give a horizontal bar. Works in both layouts.
+- **Rotatable Task List**: Put the sidebar on any edge — left, right, top, or bottom — with `Shift+B`. Left/right give a vertical sidebar; top/bottom give a horizontal bar. Works in both layouts and leaves inactive chrome transparent so your terminal background shows through.
 - **Embedded Terminals**: Run multiple TUIs in a single window using Ghostty's high-performance terminal emulator.
 - **First-Run Onboarding Wizard**: A welcome screen and multi-select app-preset picker appears on first launch when nothing is configured. Re-run anytime from the command palette.
 - **Command Palette**: Fuzzy-search apps, global commands, and per-app actions (switch/start, stop, edit, remove) with `Space`.
