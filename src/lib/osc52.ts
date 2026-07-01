@@ -66,6 +66,22 @@ export function extractOsc52(input: string): Osc52ExtractResult {
   return { output, sequences, pending: "" }
 }
 
+export function isOsc52ClipboardWrite(sequence: string): boolean {
+  if (!sequence.startsWith(OSC52_PREFIX)) return false
+  const withoutTerminator = sequence.endsWith(ST)
+    ? sequence.slice(0, -ST.length)
+    : sequence.endsWith(BEL)
+      ? sequence.slice(0, -BEL.length)
+      : sequence
+  const payloadSeparator = withoutTerminator.indexOf(";", OSC52_PREFIX.length)
+  if (payloadSeparator === -1) return false
+  return withoutTerminator.slice(payloadSeparator + 1) !== "?"
+}
+
+export function stripOsc52(input: string): string {
+  return extractOsc52(input).output
+}
+
 let ttyFd: number | null | undefined
 
 /**

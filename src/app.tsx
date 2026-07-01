@@ -26,7 +26,7 @@ import { resolveTheme } from "./lib/palette"
 import { widthMode } from "./lib/width-layout"
 import { computePaneRects, collectPaneIds } from "./lib/layout"
 import { type SessionClient, reconnectSessionClient } from "./lib/session-client"
-import { extractOsc52, forwardToRealTerminal } from "./lib/osc52"
+import { extractOsc52, forwardToRealTerminal, isOsc52ClipboardWrite, stripOsc52 } from "./lib/osc52"
 import { APP_VERSION } from "./lib/version"
 import type { RunningAppSnapshot, RunningPaneSnapshot, ServerMessage, WindowSnapshot } from "./lib/ipc"
 import type { AppStatus, AppEntry, AppEntryConfig, Config, LayoutMode, SidebarPosition, ThemeConfig } from "./types"
@@ -904,7 +904,7 @@ export const App: Component<AppProps> = (props) => {
           paneId: pane.paneId,
           entry: pane.entry,
           status: pane.status,
-          buffer: pane.buffer,
+          buffer: stripOsc52(pane.buffer),
           runId: pane.runId,
         }))
         const windows = (message.windows ?? []).map((window) => ({
@@ -935,7 +935,7 @@ export const App: Component<AppProps> = (props) => {
       const apps = (message.runningApps ?? []).map((app) => ({
         entry: app.entry,
         status: app.status,
-        buffer: app.buffer,
+        buffer: stripOsc52(app.buffer),
         runId: app.runId,
       }))
       tabsStore.setRunningApps(apps)
@@ -946,7 +946,7 @@ export const App: Component<AppProps> = (props) => {
       tabsStore.addRunningApp({
         entry: message.app.entry,
         status: message.app.status,
-        buffer: message.app.buffer,
+        buffer: stripOsc52(message.app.buffer),
         runId: message.app.runId,
       })
     }
@@ -968,7 +968,9 @@ export const App: Component<AppProps> = (props) => {
         osc52PendingByTab.delete(message.id)
       }
       for (const sequence of sequences) {
-        forwardToRealTerminal(sequence)
+        if (isOsc52ClipboardWrite(sequence)) {
+          forwardToRealTerminal(sequence)
+        }
       }
       tabsStore.appendToBuffer(message.id, output)
     }
@@ -982,7 +984,7 @@ export const App: Component<AppProps> = (props) => {
         paneId: message.pane.paneId,
         entry: message.pane.entry,
         status: message.pane.status,
-        buffer: message.pane.buffer,
+        buffer: stripOsc52(message.pane.buffer),
         runId: message.pane.runId,
       })
       const pending = pendingPaneBuffers.get(message.pane.paneId)
@@ -1009,7 +1011,9 @@ export const App: Component<AppProps> = (props) => {
         osc52PendingByPane.delete(message.paneId)
       }
       for (const sequence of sequences) {
-        forwardToRealTerminal(sequence)
+        if (isOsc52ClipboardWrite(sequence)) {
+          forwardToRealTerminal(sequence)
+        }
       }
 
       if (windowsStore.getRunningPane(message.paneId)) {

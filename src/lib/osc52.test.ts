@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { extractOsc52 } from "./osc52"
+import { extractOsc52, isOsc52ClipboardWrite, stripOsc52 } from "./osc52"
 
 describe("extractOsc52", () => {
   test("extracts a BEL-terminated set sequence and strips it from output", () => {
@@ -45,9 +45,13 @@ describe("extractOsc52", () => {
     expect(result.output).toBe("mid")
   })
 
-  test("passes through the query form (?) as a sequence too — forwarding, not answering, it", () => {
-    const result = extractOsc52("\x1b]52;c;?\x07")
-    expect(result.sequences).toEqual(["\x1b]52;c;?\x07"])
-    expect(result.output).toBe("")
+  test("identifies query forms as non-write sequences", () => {
+    expect(isOsc52ClipboardWrite("\x1b]52;c;?\x07")).toBe(false)
+    expect(isOsc52ClipboardWrite("\x1b]52;c;?\x1b\\")).toBe(false)
+    expect(isOsc52ClipboardWrite("\x1b]52;c;aGVsbG8=\x07")).toBe(true)
+  })
+
+  test("strips completed and pending OSC 52 sequences from snapshots", () => {
+    expect(stripOsc52("before\x1b]52;c;aGVsbG8=\x07after\x1b]52;c;partial")).toBe("beforeafter")
   })
 })
