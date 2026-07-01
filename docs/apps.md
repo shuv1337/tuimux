@@ -1862,6 +1862,8 @@ apps:
       TERM: "tmux-256color"
 ```
 
+For clipboard behavior across nested terminal layers (paste forwarding and OSC 52 copy passthrough), see [Troubleshooting → Copy & Paste](./troubleshooting.md#copy--paste).
+
 ### Apps with Specific Requirements
 
 **htop** - works best with 256 colors:

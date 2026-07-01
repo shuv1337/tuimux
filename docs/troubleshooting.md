@@ -212,6 +212,60 @@ session:
 
 ---
 
+## Copy & Paste
+
+tuimux forwards bracketed paste and OSC 52 clipboard sequences between the
+child app it's running and whatever it's attached to — a bare terminal, or a
+parent multiplexer like Herdr, Zellij, or tmux. Each layer in the stack has to
+cooperate for copy/paste to reach the system clipboard; this section explains
+what tuimux does and what the parent layer needs to be configured to do.
+
+### Pasting into a child app
+
+When tuimux is in TERMINAL focus, a paste (bracketed or plain) is forwarded to
+the focused app/pane. tuimux re-wraps it in bracketed-paste markers only if
+that child has itself enabled bracketed paste mode — the same rule a real
+terminal emulator follows, so a multi-line paste into a bracketed-paste-aware
+shell (bash, zsh, fish) or editor (vim, nvim) is delivered as one paste event
+instead of being executed line by line.
+
+**Symptom (fixed):** paste into a child app silently did nothing while in
+TERMINAL focus. This was caused by tuimux never listening for paste events at
+all (`usePaste` was never wired up) — any bracketed-paste sequence arriving on
+stdin was intercepted and dropped before it could reach the child.
+
+### Copying out of a child app (OSC 52)
+
+An app inside tuimux (vim's `"+y`, tmux's copy-mode, etc.) that writes an
+OSC 52 sequence to set the system clipboard has that sequence forwarded
+directly to the real terminal tuimux is attached to, bypassing tuimux's own
+rendering so it isn't swallowed as on-screen text. From there, it's up to
+whatever tuimux is running inside to relay it further up:
+
+- **Bare terminal:** works out of the box if the terminal supports OSC 52
+  (most modern terminals — Ghostty, iTerm2, WezTerm, kitty, Alacritty — do).
+- **tmux:** requires `set -g set-clipboard on` (the default in modern tmux).
+  Over SSH or with an older terminfo entry you may also need
+  `set -ga terminal-overrides ',*:Ms=\E]52;c;%p2%s\007'` — see the
+  [tmux clipboard wiki](https://github.com/tmux/tmux/wiki/Clipboard).
+- **Zellij:** OSC 52 passthrough is Zellij's default copy mechanism, so this
+  usually works with no extra config. If it doesn't reach your system
+  clipboard (e.g. no OSC 52 support in the terminal Zellij itself runs in),
+  configure a [`copy_command`](https://zellij.dev/documentation/options.html#copy_command)
+  fallback (`pbcopy` / `xclip -selection clipboard` / `wl-copy`) in Zellij's
+  config.
+- **Herdr:** same principle — Herdr needs to relay OSC 52 from the pane it's
+  hosting tuimux in up to its own real terminal.
+
+**Known limitation:** only the "set clipboard" direction of OSC 52 is
+forwarded. The "query clipboard" form (`ESC]52;c;?`, used by an app to *read*
+the system clipboard back) is intercepted and sent upward, but any reply from
+the real terminal isn't wired back into the child app's input — there's no
+supported way for a child app to read the outer clipboard through tuimux.
+Copying out works; reading back in via OSC 52 does not.
+
+---
+
 ## FAQ
 
 ### How do I quit tuimux?

@@ -520,6 +520,8 @@ If running tmux inside tuimux with the `Ctrl+A` prefix:
 - Double-tap `Ctrl+A` to send it to tmux
 - Or configure tmux to use a different prefix (e.g., `Ctrl+B`)
 
+For paste forwarding and OSC 52 clipboard copy passthrough across tmux, Zellij, Herdr, or other parent multiplexers, see [Troubleshooting → Copy & Paste](./docs/troubleshooting.md#copy--paste).
+
 ### Keys not working in Terminal Mode
 
 In Terminal Mode, all keys except `Ctrl+A` pass directly to the terminal app. Press `Ctrl+A` to switch to TABS mode for navigation.

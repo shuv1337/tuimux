@@ -45,7 +45,7 @@ export type ClientMessage =
   | { type: "stop_all" }
   | { type: "stop_entry"; id: string }
   | { type: "restart"; entry: AppEntry }
-  | { type: "input"; id: string; data: string }
+  | { type: "input"; id: string; data: string; paste?: boolean }
   | { type: "resize"; cols: number; rows: number }
   | { type: "set_active"; id: string | null }
   | { type: "update_entry"; id: string; updates: Partial<AppEntry> }
