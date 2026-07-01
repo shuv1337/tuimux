@@ -56,6 +56,7 @@ The task list can live on any edge — left, right, top, or bottom (`Shift+B`). 
 - **Command Palette**: Fuzzy-search apps, global commands, and per-app actions (switch/start, stop, edit, remove) with `Space`.
 - **Nine Built-in Themes**: Graphite (default), Night Owl, Dracula, Nord, Solarized Dark, One Dark, Catppuccin Mocha, Gruvbox Dark, and Tokyo Night — switch live, or define your own.
 - **Simple Modal Keyboard**: A control focus for navigation (shown as TABS or PANES) and a TERMINAL focus that passes all keys to the embedded PTY. Toggle with `Ctrl+A`. `Ctrl+C` always passes through to the focused app — it never quits tuimux.
+- **Nested Copy/Paste Support**: Paste into child apps and forward OSC 52 clipboard-copy sequences out through parent multiplexers like tmux, Zellij, or Herdr. See [Troubleshooting](./docs/troubleshooting.md#copy--paste) for parent configuration and known limits.
 - **Runtime Management**: Add, edit, and remove application entries directly within the app without restarting.
 - **Session Persistence**: Optional config to remember and restore running applications and the active app between restarts.
 - **App Availability Detection**: The Add modal and onboarding wizard show which of 30+ TUI presets (including AI coding agents) are installed on your system.
@@ -218,6 +219,7 @@ theme:
 
 ### v0.5.0
 - **Rotatable / Horizontal Task List**: The task list can now sit on any edge — left, right, top, or bottom. Cycle positions with `Shift+B` (or the command palette); top/bottom render it as a horizontal bar. Configurable via `sidebar_position`.
+- **Nested Copy/Paste Support**: Paste reaches the focused child app in TERMINAL focus, and OSC 52 clipboard-copy sequences are forwarded out to the real terminal so parent multiplexers can relay them to the system clipboard.
 - **First-Run Onboarding Wizard**: A welcome screen and multi-select app-preset picker appears on first launch when no config and no apps exist. Esc skips it, an `onboarding_completed` flag keeps it from reappearing, and it can be re-run anytime from the palette ("Run setup wizard").
 - **Runtime Layout Switching**: Toggle tabs ⇄ panes live with `Shift+L` — the session server restarts in the target layout and replays running apps. Includes correctness fixes so apps and focus survive the switch.
 - **Dependency-Security Docs**: Documented the Bun + Socket GitHub App security posture in [SECURITY.md](./SECURITY.md).
