@@ -61,12 +61,11 @@ export const WindowList: Component<WindowListProps> = (props) => {
       flexDirection="row"
       width={props.width}
       height={1}
-      backgroundColor={props.theme.surface}
       overflow="hidden"
     >
       <Show when={horizontalView().overflow}>
-        <box height={1} backgroundColor={props.theme.surface}>
-          <text fg={props.theme.textDim} bg={props.theme.surface}>
+        <box height={1}>
+          <text fg={props.theme.textDim}>
             {horizontalView().showLeft ? "‹ " : "  "}
           </text>
         </box>
@@ -75,7 +74,7 @@ export const WindowList: Component<WindowListProps> = (props) => {
         {(window, i) => {
           const actualIndex = () => horizontalView().start + i()
           const isActive = () => window.id === props.activeWindowId
-          const segBg = () => (isActive() ? props.theme.surfaceAlt : props.theme.surface)
+          const segBg = () => (isActive() ? props.theme.surfaceAlt : undefined)
           const segFg = () => (isActive() ? props.theme.accent : props.theme.text)
           const segment = () => ` ${truncateTitle(window, actualIndex())} `
 
@@ -93,16 +92,16 @@ export const WindowList: Component<WindowListProps> = (props) => {
         }}
       </For>
       <Show when={horizontalView().overflow}>
-        <box height={1} backgroundColor={props.theme.surface}>
-          <text fg={props.theme.textDim} bg={props.theme.surface}>
+        <box height={1}>
+          <text fg={props.theme.textDim}>
             {horizontalView().showRight ? " ›" : "  "}
           </text>
         </box>
       </Show>
 
       {/* Trailing add affordance */}
-      <box height={1} backgroundColor={props.theme.surface} onMouseDown={props.onAddClick}>
-        <text fg={props.theme.textDim} bg={props.theme.surface}>{" + "}</text>
+      <box height={1} onMouseDown={props.onAddClick}>
+        <text fg={props.theme.textDim}>{" + "}</text>
       </box>
     </box>
   )
@@ -116,10 +115,9 @@ export const WindowList: Component<WindowListProps> = (props) => {
       flexDirection="column"
       width={props.width}
       height={props.height}
-      backgroundColor={props.theme.surface}
     >
-      {/* Header band — color-separated, no border */}
-      <box height={1} width={props.width} backgroundColor={props.theme.surfaceAlt} paddingLeft={1}>
+      {/* Header band — transparent, text-only so terminal theming shows through */}
+      <box height={1} width={props.width} paddingLeft={1}>
         <text fg={props.theme.accent}>
           <b>Windows</b>
         </text>
@@ -132,7 +130,7 @@ export const WindowList: Component<WindowListProps> = (props) => {
             const isActive = () => window.id === props.activeWindowId
             const isSelected = () => props.isFocused && index() === (props.selectedIndex ?? -1)
             const highlighted = () => isActive() || isSelected()
-            const rowBg = () => (highlighted() ? props.theme.surfaceAlt : props.theme.surface)
+            const rowBg = () => (highlighted() ? props.theme.surfaceAlt : undefined)
             const labelColor = () => (isActive() ? props.theme.accent : props.theme.text)
             const label = () => {
               const maxLen = props.width - 3 // rail + space + breathing room

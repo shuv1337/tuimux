@@ -75,12 +75,11 @@ export const TabList: Component<TabListProps> = (props) => {
       flexDirection="row"
       width={props.width}
       height={1}
-      backgroundColor={props.theme.surface}
       overflow="hidden"
     >
       <Show when={horizontalView().overflow}>
-        <box height={1} backgroundColor={props.theme.surface}>
-          <text fg={props.theme.textDim} bg={props.theme.surface}>
+        <box height={1}>
+          <text fg={props.theme.textDim}>
             {horizontalView().showLeft ? "‹ " : "  "}
           </text>
         </box>
@@ -90,14 +89,14 @@ export const TabList: Component<TabListProps> = (props) => {
           <box
             flexDirection="row"
             height={1}
-            backgroundColor={seg.highlighted ? props.theme.surfaceAlt : props.theme.surface}
+            backgroundColor={seg.highlighted ? props.theme.surfaceAlt : undefined}
             onMouseDown={() => props.onSelect(seg.entry.id)}
           >
             <text> </text>
             <text fg={seg.dotColor}>{seg.dot}</text>
             <text
               fg={seg.isActive ? props.theme.accent : props.theme.text}
-              bg={seg.highlighted ? props.theme.surfaceAlt : props.theme.surface}
+              bg={seg.highlighted ? props.theme.surfaceAlt : undefined}
             >
               {seg.isActive ? <b>{seg.name}</b> : seg.name}
             </text>
@@ -106,8 +105,8 @@ export const TabList: Component<TabListProps> = (props) => {
         )}
       </For>
       <Show when={horizontalView().overflow}>
-        <box height={1} backgroundColor={props.theme.surface}>
-          <text fg={props.theme.textDim} bg={props.theme.surface}>
+        <box height={1}>
+          <text fg={props.theme.textDim}>
             {horizontalView().showRight ? " ›" : "  "}
           </text>
         </box>
@@ -136,10 +135,9 @@ export const TabList: Component<TabListProps> = (props) => {
       flexDirection="column"
       width={props.width}
       height={props.height}
-      backgroundColor={props.theme.surface}
     >
-      {/* Header band — color-separated, no border */}
-      <box height={1} width={props.width} backgroundColor={props.theme.surfaceAlt} paddingLeft={1}>
+      {/* Header band — transparent, text-only so terminal theming shows through */}
+      <box height={1} width={props.width} paddingLeft={1}>
         <text fg={props.theme.accent}>
           <b>Apps {hasScrollUp() ? "▲" : " "}{hasScrollDown() ? "▼" : " "}</b>
         </text>

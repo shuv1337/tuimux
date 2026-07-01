@@ -41,7 +41,8 @@ export const PaneView: Component<PaneViewProps> = (props) => {
       >
         {(pane) => (
           <box flexDirection="column" flexGrow={1}>
-            <box height={1} flexDirection="row" backgroundColor={props.theme.surface}>
+            {/* Pane header — transparent, text-only so terminal theming shows through */}
+            <box height={1} flexDirection="row">
               <text fg={props.theme.accent}>
                 <b>{pane().entry.name}</b>
               </text>
