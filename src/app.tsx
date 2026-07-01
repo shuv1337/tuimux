@@ -1,6 +1,6 @@
 import { Component, Show, createSignal, createEffect, onCleanup, createMemo, onMount } from "solid-js"
 import type { JSX } from "solid-js"
-import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid"
+import { useKeyboard, usePaste, useTerminalDimensions, useRenderer } from "@opentui/solid"
 import { TabList } from "./components/TabList"
 import { TerminalPane } from "./components/TerminalPane"
 import { PaneLayout } from "./components/PaneLayout"
@@ -26,6 +26,7 @@ import { resolveTheme } from "./lib/palette"
 import { widthMode } from "./lib/width-layout"
 import { computePaneRects, collectPaneIds } from "./lib/layout"
 import { type SessionClient, reconnectSessionClient } from "./lib/session-client"
+import { extractOsc52, forwardToRealTerminal } from "./lib/osc52"
 import { APP_VERSION } from "./lib/version"
 import type { RunningAppSnapshot, RunningPaneSnapshot, ServerMessage, WindowSnapshot } from "./lib/ipc"
 import type { AppStatus, AppEntry, AppEntryConfig, Config, LayoutMode, SidebarPosition, ThemeConfig } from "./types"
@@ -47,6 +48,14 @@ export const App: Component<AppProps> = (props) => {
   const uiStore = createUIStore()
 
   const pendingPaneBuffers = new Map<string, string>()
+
+  // OSC 52 clipboard sequences can arrive split across separate "output"/
+  // "pane_output" IPC messages; carry over an unterminated tail per
+  // tab/pane id until the rest shows up. See src/lib/osc52.ts for why this
+  // has to happen here (the only process attached to a real terminal)
+  // rather than in the session-server/pty layer.
+  const osc52PendingByTab = new Map<string, string>()
+  const osc52PendingByPane = new Map<string, string>()
 
   // Get terminal dimensions from opentui
   const terminalDims = useTerminalDimensions()
@@ -825,6 +834,45 @@ export const App: Component<AppProps> = (props) => {
     }
   })
 
+  // opentui intercepts bracketed-paste sequences (ESC[200~ ... ESC[201~) from
+  // stdin itself and emits them as a distinct "paste" event rather than
+  // ordinary keypress events — useKeyboard above never sees them. Without
+  // this handler pasted text was silently dropped in terminal focus instead
+  // of reaching the child app/pane.
+  usePaste((event) => {
+    debugLog(`[App] paste: ${event.text.length} chars, modal: ${uiStore.store.activeModal}`)
+
+    if (uiStore.store.activeModal) {
+      return
+    }
+
+    const isPanes = isPanesLayout()
+    const inTerminalFocus = isPanes
+      ? windowsStore.store.focusMode === "terminal"
+      : tabsStore.store.focusMode === "terminal"
+    if (!inTerminalFocus) {
+      return
+    }
+
+    if (isPanes) {
+      const activePaneId = windowsStore.store.activePaneId
+      const activePane = activePaneId ? windowsStore.getRunningPane(activePaneId) : undefined
+      if (activePane) {
+        client().sendInput(activePane.paneId, event.text, { paste: true })
+        event.preventDefault()
+      }
+      return
+    }
+
+    const activeApp = tabsStore.store.activeTabId
+      ? tabsStore.getRunningApp(tabsStore.store.activeTabId)
+      : undefined
+    if (activeApp) {
+      client().sendInput(activeApp.entry.id, event.text, { paste: true })
+      event.preventDefault()
+    }
+  })
+
   // First run (no config file and no configured apps) opens the onboarding
   // wizard, which takes precedence over the --add modal. Otherwise honor --add.
   onMount(() => {
@@ -912,7 +960,17 @@ export const App: Component<AppProps> = (props) => {
     }
 
     const handleOutput = (message: { id: string; data: string }) => {
-      tabsStore.appendToBuffer(message.id, message.data)
+      const carry = osc52PendingByTab.get(message.id) ?? ""
+      const { output, sequences, pending } = extractOsc52(carry + message.data)
+      if (pending) {
+        osc52PendingByTab.set(message.id, pending)
+      } else {
+        osc52PendingByTab.delete(message.id)
+      }
+      for (const sequence of sequences) {
+        forwardToRealTerminal(sequence)
+      }
+      tabsStore.appendToBuffer(message.id, output)
     }
 
     const handleActive = (message: { id: string | null }) => {
@@ -943,12 +1001,23 @@ export const App: Component<AppProps> = (props) => {
     }
 
     const handlePaneOutput = (message: { paneId: string; data: string }) => {
+      const carry = osc52PendingByPane.get(message.paneId) ?? ""
+      const { output, sequences, pending } = extractOsc52(carry + message.data)
+      if (pending) {
+        osc52PendingByPane.set(message.paneId, pending)
+      } else {
+        osc52PendingByPane.delete(message.paneId)
+      }
+      for (const sequence of sequences) {
+        forwardToRealTerminal(sequence)
+      }
+
       if (windowsStore.getRunningPane(message.paneId)) {
-        windowsStore.appendPaneBuffer(message.paneId, message.data)
+        windowsStore.appendPaneBuffer(message.paneId, output)
         return
       }
       const existing = pendingPaneBuffers.get(message.paneId) ?? ""
-      pendingPaneBuffers.set(message.paneId, existing + message.data)
+      pendingPaneBuffers.set(message.paneId, existing + output)
     }
 
     const handleWindowChanged = (message: { window: WindowSnapshot }) => {

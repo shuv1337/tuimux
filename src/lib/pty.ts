@@ -12,6 +12,15 @@ export interface PtyProcess {
   terminal: Terminal
   proc: Subprocess<any, any, any>
   write: (data: string) => void
+  /**
+   * Write pasted text to the child. Wraps it in bracketed-paste markers
+   * (ESC[200~ / ESC[201~) only if the child has itself asked for bracketed
+   * paste mode (by writing ESC[?2004h), mirroring how a real terminal
+   * emulator decides whether to bracket a paste for the foreground program.
+   * Sending the markers to a program that never asked for them would just
+   * show up as literal garbage in its input.
+   */
+  writePaste: (text: string) => void
   resize: (cols: number, rows: number) => void
   kill: () => void
   onData: (callback: (data: string) => void) => void
@@ -45,25 +54,53 @@ function hexToOscRgb(hex: string): string {
 }
 
 function buildColorResponse(code: "10" | "11", hex: string): string {
-  return `\u001b]${code};${hexToOscRgb(hex)}\u001b\\`
+  return `\x1b]${code};${hexToOscRgb(hex)}\x1b\\`
 }
 
 function buildCursorPositionReport(): string {
-  return "\u001b[1;1R"
+  return "\x1b[1;1R"
 }
 
-function stripTerminalQueries(
+const BRACKETED_PASTE_ENABLE = "\x1b[?2004h"
+const BRACKETED_PASTE_DISABLE = "\x1b[?2004l"
+const BRACKETED_PASTE_START = "\x1b[200~"
+const BRACKETED_PASTE_END = "\x1b[201~"
+
+/**
+ * Wrap pasted text in bracketed-paste markers when (and only when) the child
+ * has enabled bracketed paste mode. Sending the markers to a program that
+ * never asked for them (no ESC[?2004h seen from its output) would land as
+ * literal garbage bytes in its input, exactly as it would on a real terminal.
+ */
+export function wrapForPaste(text: string, bracketedPasteEnabled: boolean): string {
+  if (!bracketedPasteEnabled) return text
+  return `${BRACKETED_PASTE_START}${text}${BRACKETED_PASTE_END}`
+}
+
+export interface PasteModeState {
+  enabled: boolean
+}
+
+export function stripTerminalQueries(
   input: string,
-  colors: { fg: string; bg: string }
+  colors: { fg: string; bg: string },
+  pasteMode: PasteModeState
 ): { output: string; responses: string[]; pending: string } {
   let output = ""
   const responses: string[] = []
   let i = 0
-  const prefixes = ["\u001b[6n", "\u001b[?6n", "\u001b]10;?", "\u001b]11;?"]
+  const prefixes = [
+    "\x1b[6n",
+    "\x1b[?6n",
+    "\x1b]10;?",
+    "\x1b]11;?",
+    BRACKETED_PASTE_ENABLE,
+    BRACKETED_PASTE_DISABLE,
+  ]
 
   while (i < input.length) {
     const char = input[i]
-    if (char !== "\u001b") {
+    if (char !== "\x1b") {
       output += char
       i += 1
       continue
@@ -79,23 +116,35 @@ function stripTerminalQueries(
 
     const next = input[i + 1]
     if (next === "[") {
-      if (input.startsWith("\u001b[6n", i)) {
+      if (input.startsWith("\x1b[6n", i)) {
         responses.push(buildCursorPositionReport())
         i += 4
         continue
       }
-      if (input.startsWith("\u001b[?6n", i)) {
+      if (input.startsWith("\x1b[?6n", i)) {
         responses.push(buildCursorPositionReport())
         i += 5
+        continue
+      }
+      if (input.startsWith(BRACKETED_PASTE_ENABLE, i)) {
+        pasteMode.enabled = true
+        output += BRACKETED_PASTE_ENABLE
+        i += BRACKETED_PASTE_ENABLE.length
+        continue
+      }
+      if (input.startsWith(BRACKETED_PASTE_DISABLE, i)) {
+        pasteMode.enabled = false
+        output += BRACKETED_PASTE_DISABLE
+        i += BRACKETED_PASTE_DISABLE.length
         continue
       }
     }
 
     if (next === "]") {
-      if (input.startsWith("\u001b]10;?", i) || input.startsWith("\u001b]11;?", i)) {
-        const isForeground = input.startsWith("\u001b]10;?", i)
+      if (input.startsWith("\x1b]10;?", i) || input.startsWith("\x1b]11;?", i)) {
+        const isForeground = input.startsWith("\x1b]10;?", i)
         const terminatorIndex = input.indexOf("\u0007", i + 5)
-        const stIndex = input.indexOf("\u001b\\", i + 5)
+        const stIndex = input.indexOf("\x1b\\", i + 5)
         let endIndex = -1
         let terminatorLength = 0
 
@@ -219,6 +268,7 @@ export function spawnPty(
   let exitCallback: ((info: { exitCode: number; signal: number }) => void) | null = null
 
   let pendingControl = ""
+  const pasteMode: PasteModeState = { enabled: false }
 
   // Create terminal with callbacks
   const terminal = new Bun.Terminal({
@@ -226,7 +276,7 @@ export function spawnPty(
     rows,
     data(_term, data) {
       const str = typeof data === "string" ? data : new TextDecoder().decode(data)
-      const parsed = stripTerminalQueries(pendingControl + str, colorOverrides)
+      const parsed = stripTerminalQueries(pendingControl + str, colorOverrides, pasteMode)
       pendingControl = parsed.pending
 
       if (parsed.responses.length > 0) {
@@ -267,6 +317,10 @@ export function spawnPty(
 
     write(data: string) {
       terminal.write(data)
+    },
+
+    writePaste(text: string) {
+      terminal.write(wrapForPaste(text, pasteMode.enabled))
     },
 
     resize(cols: number, rows: number) {

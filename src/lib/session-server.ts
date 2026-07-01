@@ -420,7 +420,11 @@ export async function startSessionServer(
       case "input": {
         const app = runningApps.get(message.id)
         if (app) {
-          app.pty.write(message.data)
+          if (message.paste) {
+            app.pty.writePaste(message.data)
+          } else {
+            app.pty.write(message.data)
+          }
         }
         break
       }
@@ -1055,7 +1059,11 @@ async function startPanesSessionServer(
       case "input": {
         const pane = runningPanes.get(message.id)
         if (pane) {
-          pane.pty.write(message.data)
+          if (message.paste) {
+            pane.pty.writePaste(message.data)
+          } else {
+            pane.pty.write(message.data)
+          }
         }
         break
       }

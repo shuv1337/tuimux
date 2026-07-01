@@ -74,8 +74,8 @@ export class SessionClient extends EventEmitter {
     this.send({ type: "restart", entry })
   }
 
-  sendInput(id: string, data: string) {
-    this.send({ type: "input", id, data })
+  sendInput(id: string, data: string, options?: { paste?: boolean }) {
+    this.send({ type: "input", id, data, paste: options?.paste })
   }
 
   resize(cols: number, rows: number) {
