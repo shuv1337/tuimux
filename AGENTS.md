@@ -14,6 +14,12 @@
 - State directory: `~/.local/state/tuimux/` (XDG_STATE_HOME).
 - On first run with no config, tuimux auto-migrates an existing `~/.config/tuidoscope` config + session if present.
 
+## "My apps disappeared" is (almost) never config loss
+- tuimux runs a persistent background **session server** (`tuimux --server`) listening on `~/.local/state/tuimux/tuimux.sock`. The interactive client (`tui`/`tuimux`) always attaches to whatever server already owns that socket — it never re-reads config into an existing server, and never checks that the running server's layout/args match your config.
+- If a server gets started standalone (manual `--server --layout panes --no-autostart` invocation, a leftover smoke-test process, a crashed-and-orphaned instance, etc.), every subsequent `tui` silently reconnects to it and shows *that* server's in-memory session (e.g. a bare default "Shell" window) instead of the apps list from `tuimux.yaml`.
+- Before assuming config was lost, check for a stale server: `ps aux | grep 'index.js.*--server'` and inspect its cmdline/flags. If one is running with unexpected flags (wrong `--layout`, `--no-autostart`), kill it cleanly with `tuimux --shutdown` (removes the socket) and relaunch `tui` — a fresh server always reloads `tuimux.yaml` on start and will show the real app list.
+- `TUIMUX_DEBUG=1 tuimux --debug` logs `[config] Loaded N apps from config` on every server start (`~/.local/state/tuimux/debug.log`) — a fast way to confirm the config the *current* server actually loaded, versus what's on disk.
+
 ## Theming conventions
 - Chrome containers (sidebar bodies, header bands, embedded-app title strips) must NOT set an explicit `backgroundColor`/`bg` — leaving it `undefined` lets terminal transparency show through, matching `@opentui/core`'s default `backgroundColor: "transparent"`. Only highlighted/active/selected rows should paint `theme.surfaceAlt` (or similar) for readability. See `TabItem.tsx`'s `rowBg()` for the reference pattern; `TabList.tsx`, `WindowList.tsx`, `TerminalPane.tsx`, and `PaneView.tsx` all follow it.
 - When a `<box>` needs a background fill AND a border, prefer applying background only where required (e.g. selected rows) rather than a full-container fill, to avoid opaque-slab regressions like GH issue #20.
