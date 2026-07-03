@@ -87,6 +87,44 @@ apps:
     cwd: "~"
     autostart: false
 
+  - name: "ctop"
+    command: "ctop"
+    cwd: "~"
+    autostart: false
+
+  # API and database consoles
+  - name: "posting"
+    command: "posting"
+    cwd: "~"
+    autostart: false
+
+  - name: "rainfrog"
+    command: "rainfrog"
+    cwd: "~"
+    autostart: false
+
+  # Network and log diagnostics
+  - name: "termshark"
+    command: "termshark"
+    cwd: "~"
+    autostart: false
+
+  - name: "trippy"
+    command: "trip"
+    cwd: "~"
+    autostart: false
+
+  - name: "lnav"
+    command: "lnav"
+    cwd: "~"
+    autostart: false
+
+  - name: "tufw"
+    command: "sudo"
+    args: "tufw"
+    cwd: "~"
+    autostart: false
+
   # AI coding agents
   - name: "claude"
     command: "claude"
