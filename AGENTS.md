@@ -9,6 +9,11 @@
 - **Post-commit validation:** After committing changes, run `bun run build` and confirm the global binary matches by hashing `dist/index.js` and `$(readlink -f $(command -v tuimux))` with `sha256sum`.
 - **Debug:** Set `TUIMUX_DEBUG=1` for verbose logging.
 
+## GitHub Actions
+- `publish.yml` publishes packages manually via `workflow_dispatch` and requires `NPM_TOKEN`.
+- `reviewbot.yml` is advisory PR review automation for pull requests targeting `master`; it only runs for same-repository PR branches, intentionally skips external forks because `CLAUDE_CODE_OAUTH_TOKEN` is withheld, and must not be configured as a branch-protection required check.
+- Maintainers provision `CLAUDE_CODE_OAUTH_TOKEN` out of band; the workflow installs and verifies the `claude` CLI before invoking `shuv1337/shuvbot@v0`.
+
 ## Configuration
 - Default config location: `~/.config/tuimux/tuimux.yaml` (XDG_CONFIG_HOME) or local `./tuimux.yaml`.
 - State directory: `~/.local/state/tuimux/` (XDG_STATE_HOME).

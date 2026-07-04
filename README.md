@@ -256,6 +256,8 @@ theme:
 
 Contributions are welcome! Please feel free to open an issue or submit a pull request on [GitHub](https://github.com/shuv1337/tuimux).
 
+Pull requests to `master` run the advisory `reviewbot` GitHub Actions workflow for same-repository branches only; external fork PRs are skipped because the Claude Code OAuth secret is not exposed to forks. Reviewbot is not a branch-protection required check, and maintainers must provision `CLAUDE_CODE_OAUTH_TOKEN` out of band.
+
 ## Acknowledgments
 
 This project is built directly on top of:
