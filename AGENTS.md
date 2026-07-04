@@ -11,7 +11,7 @@
 
 ## GitHub Actions
 - `publish.yml` publishes packages manually via `workflow_dispatch` and requires `NPM_TOKEN`.
-- `reviewbot.yml` is advisory PR review automation for pull requests targeting `master`; it only runs for same-repository PR branches, intentionally skips external forks because `CLAUDE_CODE_OAUTH_TOKEN` is withheld, and must not be configured as a branch-protection required check.
+- `reviewbot.yml` is advisory PR review automation for non-draft pull requests targeting `master`; it only runs for same-repository PR branches, intentionally skips draft PRs until they are ready for review, skips external forks because `CLAUDE_CODE_OAUTH_TOKEN` is withheld, and must not be configured as a branch-protection required check.
 - Maintainers provision `CLAUDE_CODE_OAUTH_TOKEN` out of band; the workflow installs and verifies the `claude` CLI before invoking `shuv1337/shuvbot@v0`.
 
 ## Configuration
