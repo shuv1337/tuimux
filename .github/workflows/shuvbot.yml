@@ -1,4 +1,4 @@
-name: reviewbot
+name: shuvbot
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -8,7 +8,7 @@ permissions: {}                  # deny by default
 
 jobs:
   review:
-    name: reviewbot review
+    name: shuvbot review
     # Public repo: only run when the PR head is in this same repo (secrets are available).
     if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
     runs-on: ubuntu-latest
@@ -29,17 +29,17 @@ jobs:
       - name: Verify Claude Code
         run: claude --version
 
-      - name: Run reviewbot
+      - name: Run shuvbot
         uses: shuv1337/shuvbot@v0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-      - name: Upload reviewbot artifacts
+      - name: Upload shuvbot artifacts
         if: always()
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
-          name: reviewbot
-          path: ${{ runner.temp }}/reviewbot
+          name: shuvbot
+          path: ${{ runner.temp }}/shuvbot
           if-no-files-found: warn
