@@ -44,6 +44,13 @@ describe("ConfigSchema layout back-compat", () => {
   })
 })
 
+describe("ConfigSchema sidebar position", () => {
+  test("accepts a hidden sidebar", () => {
+    const result = ConfigSchema.parse({ sidebar_position: "hidden" })
+    expect(result.sidebar_position).toBe("hidden")
+  })
+})
+
 describe("ensureAppEntryIds", () => {
   test("preserves existing ids and reports no update", () => {
     const config = makeConfig([

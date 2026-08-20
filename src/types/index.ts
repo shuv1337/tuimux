@@ -53,7 +53,7 @@ export type AppStatus = "stopped" | "running" | "error"
 
 export type LayoutMode = "tabs" | "panes"
 
-export type SidebarPosition = "left" | "right" | "top" | "bottom"
+export type SidebarPosition = "left" | "right" | "top" | "bottom" | "hidden"
 
 export type PaneId = string
 export type WindowId = string

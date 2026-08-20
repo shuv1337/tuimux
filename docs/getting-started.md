@@ -84,7 +84,7 @@ Press **`Ctrl+A`** to toggle between control and terminal focus. Double-tap `Ctr
 | `Space` | Open command palette |
 | `?` | Show help cheatsheet |
 | `Shift+L` | Switch between tabs and panes layout |
-| `Shift+B` | Rotate sidebar position (left → top → right → bottom) |
+| `Shift+B` | Rotate sidebar position (left → top → right → bottom → hidden) |
 | `q` | Detach (leave apps running) |
 | `Q` (Shift+Q) | Quit and stop all apps |
 

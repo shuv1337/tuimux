@@ -31,7 +31,7 @@ theme:
 # UI settings
 tab_width: 20
 layout: "tabs"           # tabs | panes  (legacy: classic→tabs, zellij→panes)
-sidebar_position: "left" # left | right | top | bottom  (Shift+B to cycle)
+sidebar_position: "left" # left | right | top | bottom | hidden  (Shift+B to cycle)
 
 # Onboarding — set automatically; re-run wizard via command palette
 onboarding_completed: false
@@ -129,8 +129,9 @@ You can switch layouts **at runtime** with **`Shift+L`** (or command palette →
 | `right` | Vertical sidebar on the right |
 | `top` | Horizontal bar at the top |
 | `bottom` | Horizontal bar at the bottom |
+| `hidden` | Hide the sidebar and give its space to the app |
 
-Press **`Shift+B`** (or command palette → "Rotate sidebar position") to cycle through positions at runtime.
+Press **`Shift+B`** (or command palette → "Rotate sidebar position") to cycle through positions at runtime. When the sidebar is hidden in terminal focus, press **`Ctrl+A`**, then **`Space`** to open the command palette and restore it.
 
 ### `focus_on_launch`
 (Default: `true`) When an app launches, automatically switch into TERMINAL focus so you can start typing into it immediately. Set to `false` to stay in control focus (TABS in tabs mode, PANES in panes mode) after launching.

@@ -50,7 +50,7 @@ The task list can live on any edge — left, right, top, or bottom (`Shift+B`). 
 
 - **Two Layout Modes**: A **tabs** layout (task-list sidebar + one active app in an embedded terminal) and a tmux/zellij-style **panes** layout (tiled, split-able windows with multiple apps visible at once). Set `layout: tabs | panes` in config.
 - **Runtime Layout Switching**: Toggle tabs ⇄ panes live with `Shift+L` (or the command palette) — the session restarts in the target layout and replays your running apps.
-- **Rotatable Task List**: Put the sidebar on any edge — left, right, top, or bottom — with `Shift+B`. Left/right give a vertical sidebar; top/bottom give a horizontal bar. Works in both layouts and leaves inactive chrome transparent so your terminal background shows through.
+- **Rotatable Task List**: Put the sidebar on any edge — left, right, top, or bottom — or hide it entirely with `Shift+B`. Left/right give a vertical sidebar; top/bottom give a horizontal bar. Works in both layouts and leaves inactive chrome transparent so your terminal background shows through.
 - **Embedded Terminals**: Run multiple TUIs in a single window using Ghostty's high-performance terminal emulator.
 - **First-Run Onboarding Wizard**: A welcome screen and multi-select app-preset picker appears on first launch when nothing is configured. Re-run anytime from the command palette.
 - **Command Palette**: Fuzzy-search apps, global commands, and per-app actions (switch/start, stop, edit, remove) with `Space`.
@@ -147,7 +147,7 @@ bun run typecheck
 
 Tuimux looks for a configuration file at `~/.config/tuimux/tuimux.yaml`. It also supports a local `tuimux.yaml` in the current working directory for project-specific setups. On first run with no config, tuimux auto-migrates an existing `~/.config/tuidoscope` config and session if one is present.
 
-Set the layout with `layout: tabs | panes` (default `tabs`; legacy values `classic` → tabs and `zellij` → panes are still accepted) and the sidebar edge with `sidebar_position: left | right | top | bottom` (default `left`).
+Set the layout with `layout: tabs | panes` (default `tabs`; legacy values `classic` → tabs and `zellij` → panes are still accepted) and the sidebar edge with `sidebar_position: left | right | top | bottom | hidden` (default `left`).
 
 ### Keyboard Shortcuts
 
@@ -157,7 +157,7 @@ Focus is split between a **control** focus for navigation (shown as **TABS** in 
 - **Double-tap `Ctrl+A`** - Send a literal `Ctrl+A` to the terminal (useful for nested tmux/screen)
 - **`Ctrl+C`** - Always passes through to the focused app; it never quits tuimux
 
-**TERMINAL focus**: all keystrokes pass through to the embedded terminal.
+**TERMINAL focus**: all keystrokes except `Ctrl+A` pass through to the embedded terminal. With the sidebar hidden, press `Ctrl+A`, then `Space` to open the command palette and restore or move it.
 
 **TABS-mode control keys** (single keystrokes):
 
@@ -177,7 +177,7 @@ Focus is split between a **control** focus for navigation (shown as **TABS** in 
 | `Q` | Quit and shut down |
 | `?` | Help cheatsheet |
 | `Shift+L` | Switch layout (tabs/panes) |
-| `Shift+B` | Rotate sidebar position (left → top → right → bottom) |
+| `Shift+B` | Rotate sidebar position (left → top → right → bottom → hidden) |
 
 **PANES-mode control keys** (single keystrokes):
 

@@ -77,8 +77,8 @@ export const CommandPalette: Component<CommandPaletteProps> = (props) => {
     {
       id: "rotate-sidebar",
       name: "Rotate sidebar position",
-      description: "Cycle sidebar: left → top → right → bottom",
-      keywords: ["sidebar", "rotate", "position", "left", "right", "top", "bottom", "move"],
+      description: "Cycle sidebar: left → top → right → bottom → hidden",
+      keywords: ["sidebar", "rotate", "position", "left", "right", "top", "bottom", "hidden", "hide", "show", "move"],
       action: { type: "rotate_sidebar" },
     },
     {

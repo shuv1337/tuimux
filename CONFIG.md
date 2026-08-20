@@ -50,7 +50,7 @@ version: 2                      # Config schema version (required)
 theme: { ... }                  # Color theme
 tab_width: 20                   # Tab sidebar width
 layout: "tabs"                  # tabs or panes layout
-sidebar_position: "left"        # left | right | top | bottom (tab/window list placement; rotate at runtime with Shift+B)
+sidebar_position: "left"        # left | right | top | bottom | hidden (rotate at runtime with Shift+B)
 focus_on_launch: true           # Jump focus into a pane when its app launches (default: true)
 onboarding_completed: false     # Set to true once the first-run wizard is completed or skipped; prevents it re-appearing
 apps: [ ... ]                   # Application entries
@@ -78,6 +78,7 @@ Tuimux uses a simple focus-toggle model with fixed keybindings. There are no cus
 **TERMINAL Mode** - For interacting with apps:
 - All keyboard input passes through to the PTY
 - Only `Ctrl+A` is intercepted for mode switching
+- With the sidebar hidden, use `Ctrl+A`, then `Space` to open the command palette
 
 In `layout: panes`, the non-terminal focus mode is **PANES** and provides window/pane commands.
 
@@ -111,7 +112,7 @@ The double-tap is useful for:
 | `Q` | Quit and stop all apps |
 | `?` | Show help cheatsheet |
 | `Shift+L` | Switch layout (toggle tabs/panes) |
-| `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
+| `Shift+B` | Rotate sidebar position (left/top/right/bottom/hidden) |
 
 ### Command Palette Shortcuts
 
@@ -126,7 +127,7 @@ The double-tap is useful for:
 The command palette also exposes global commands (fuzzy-searchable):
 
 - **Switch layout** — toggle between tabs and panes layout
-- **Rotate sidebar position** — cycle left → top → right → bottom
+- **Rotate sidebar position** — cycle left → top → right → bottom → hidden
 - **Run setup wizard** — re-run the first-run onboarding wizard
 - **Themes…** — browse and apply built-in themes live
 
@@ -148,7 +149,7 @@ The command palette also exposes global commands (fuzzy-searchable):
 | `Q` | Quit and stop all apps |
 | `?` | Show help cheatsheet |
 | `Shift+L` | Switch layout (toggle panes/tabs) |
-| `Shift+B` | Rotate sidebar position (left/top/right/bottom) |
+| `Shift+B` | Rotate sidebar position (left/top/right/bottom/hidden) |
 | `Ctrl+A` | Switch to TERMINAL mode |
 
 ### TERMINAL Mode Shortcuts

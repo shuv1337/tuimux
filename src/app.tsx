@@ -88,6 +88,7 @@ export const App: Component<AppProps> = (props) => {
 
   // Responsive width mode (full / compact / minimum) drives chrome + sidebar collapse.
   const layoutWidthMode = createMemo(() => widthMode(terminalDims().width))
+  const sidebarVisible = () => sidebarPosition() !== "hidden" && layoutWidthMode() !== "minimum"
 
   // Double-tap Ctrl+A detection for passthrough
   let lastCtrlATime = 0
@@ -98,7 +99,7 @@ export const App: Component<AppProps> = (props) => {
   const isPanesLayout = () => layoutMode() === "panes"
 
   const tabsSidebarWidth = () =>
-    layoutWidthMode() === "minimum" ? 0 : props.config.tab_width
+    sidebarVisible() ? props.config.tab_width : 0
 
   // Width consumed by a vertical (left/right) sidebar; 0 for a horizontal one.
   const verticalSidebarWidth = () =>
@@ -106,7 +107,7 @@ export const App: Component<AppProps> = (props) => {
 
   // Height consumed by a horizontal (top/bottom) sidebar bar; 0 for a vertical one.
   const horizontalSidebarHeight = () =>
-    sidebarOrientation() === "horizontal" && layoutWidthMode() !== "minimum" ? 1 : 0
+    sidebarOrientation() === "horizontal" && sidebarVisible() ? 1 : 0
 
   const getTabsPtyDimensions = () => {
     const dims = terminalDims()
@@ -299,9 +300,9 @@ export const App: Component<AppProps> = (props) => {
     }
   }
 
-  // Rotate the sidebar through left → top → right → bottom → left and persist.
+  // Rotate the sidebar through every edge and the fully hidden state, then persist.
   const rotateSidebar = async () => {
-    const order: SidebarPosition[] = ["left", "top", "right", "bottom"]
+    const order: SidebarPosition[] = ["left", "top", "right", "bottom", "hidden"]
     const next = order[(order.indexOf(sidebarPosition()) + 1) % order.length]
     setSidebarPosition(next)
 
@@ -1410,7 +1411,7 @@ export const App: Component<AppProps> = (props) => {
         fallback={
           <SidebarLayout
             sidebar={
-              <Show when={layoutWidthMode() !== "minimum"}>
+              <Show when={sidebarVisible()}>
                 <TabList
                   entries={appsStore.store.entries}
                   activeTabId={tabsStore.store.activeTabId}
@@ -1446,7 +1447,7 @@ export const App: Component<AppProps> = (props) => {
       >
         <SidebarLayout
           sidebar={
-            <Show when={layoutWidthMode() !== "minimum"}>
+            <Show when={sidebarVisible()}>
               <WindowList
                 windows={windowsStore.store.windows}
                 activeWindowId={windowsStore.store.activeWindowId}
