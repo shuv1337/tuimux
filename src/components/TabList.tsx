@@ -1,5 +1,6 @@
 import { Component, For, createMemo, Show } from "solid-js"
-import { TabItem, getStatusIndicator, getStatusColor } from "./TabItem"
+import { TabItem } from "./TabItem"
+import { getStatusIndicator, getStatusColor } from "./tab-status"
 import type { AppEntry, AppStatus } from "../types"
 import type { Palette } from "../lib/palette"
 import { horizontalWindow } from "../lib/list-window"
@@ -31,13 +32,13 @@ export const TabList: Component<TabListProps> = (props) => {
       const isActive = entry.id === props.activeTabId
       const isFocused = props.isFocused && index === props.selectedIndex
       const highlighted = isActive || isFocused
-      const dot = getStatusIndicator(status)
-      const dotColor = getStatusColor(status, props.theme)
+      const statusMark = getStatusIndicator(status)
+      const statusColor = getStatusColor(status, props.theme)
       const name =
         entry.name.length > HORIZONTAL_NAME_MAX
           ? entry.name.slice(0, HORIZONTAL_NAME_MAX - 1) + "…"
           : entry.name
-      return { entry, isActive, isFocused, highlighted, dot, dotColor, name, index }
+      return { entry, isActive, isFocused, highlighted, statusMark, statusColor, name, index }
     })
   )
 
@@ -45,7 +46,7 @@ export const TabList: Component<TabListProps> = (props) => {
   // change, so navigating or resizing always keeps the active tab on-screen.
   const horizontalView = createMemo(() => {
     const segs = horizontalSegments()
-    // Segment column width: leading space + 1-col status dot + name + trailing
+    // Segment column width: leading space + 1-col status mark + name + trailing
     // space => name.length + 3.
     const widths = segs.map((seg) => seg.name.length + 3)
     // Active index to keep visible: when focused, follow the selection; else the
@@ -93,7 +94,7 @@ export const TabList: Component<TabListProps> = (props) => {
             onMouseDown={() => props.onSelect(seg.entry.id)}
           >
             <text> </text>
-            <text fg={seg.dotColor}>{seg.dot}</text>
+            <text fg={seg.statusColor}>{seg.statusMark}</text>
             <text
               fg={seg.isActive ? props.theme.accent : props.theme.text}
               bg={seg.highlighted ? props.theme.surfaceAlt : undefined}

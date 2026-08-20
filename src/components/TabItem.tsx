@@ -1,6 +1,7 @@
 import { Component } from "solid-js"
 import type { AppEntry, AppStatus } from "../types"
 import type { Palette } from "../lib/palette"
+import { getStatusIndicator, getStatusColor } from "./tab-status"
 
 export interface TabItemProps {
   entry: AppEntry
@@ -12,33 +13,9 @@ export interface TabItemProps {
   onSelect: () => void
 }
 
-/** Status indicator glyph. */
-export function getStatusIndicator(status: AppStatus): string {
-  switch (status) {
-    case "running":
-      return "●"
-    case "stopped":
-      return "○"
-    case "error":
-      return "✖"
-  }
-}
-
-/** Status color, fully theme-driven (no hardcoded greens/reds). */
-export function getStatusColor(status: AppStatus, theme: Palette): string {
-  switch (status) {
-    case "running":
-      return theme.on
-    case "stopped":
-      return theme.off
-    case "error":
-      return theme.error
-  }
-}
-
 export const TabItem: Component<TabItemProps> = (props) => {
   const truncatedName = () => {
-    const maxLen = props.width - 4 // rail + dot + space + breathing room
+    const maxLen = props.width - 4 // selection rail + status mark + spacing
     if (props.entry.name.length > maxLen) {
       return props.entry.name.slice(0, maxLen - 1) + "…"
     }
